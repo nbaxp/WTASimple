@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="/" />
+  <link rel="stylesheet" href="./main.css" />
+  <title></title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="importmap">
+    {
+      "imports": {
+        "html":"./utils/index.js",
+        "vue": "./lib/vue/vue.esm-browser.prod.js",
+        "vue-router": "./lib/vue-router/vue-router.esm-browser.js",
+        "pinia": "./lib/pinia/pinia.esm-browser.js",
+        "element-plus": "./lib/element-plus/index.full.min.mjs",
+        "nprogress": "./lib/nprogress/nprogress.vite-esm.js",
+        "echarts/core": "./lib/echarts/echarts.esm.min.js",
+        "vue-echarts": "./lib/vue-echarts/index.esm.min.js",
+        "@vue/devtools-api": "./lib/@vue/devtools-api/shim.js",
+        "vue-demi": "./lib/vue-demi/shim.js"
+      }
+    }
+  </script>
+  <script>
+    window.process = { env: { NODE_ENV: 'production' } };
+  </script>
+  <script type="module" src="./main.js"></script>
+  <script src="./lib/pubsub-js/pubsub.min.js"></script>
+  <script src="./lib/@microsoft/signalr/signalr.min.js"></script>
+  <script>
+    var connectionId = null;
+    const connection = new signalR.HubConnectionBuilder().withUrl('./api/hub').build();
+    const connect = () => {
+      if (connection.state === signalR.HubConnectionState.Disconnected) {
+        connection
+          .start()
+          .then(function () {
+            console.log('signalr connected');
+          })
+          .catch(function (error) {
+            console.error(error);
+            setTimeout(connect, 5000);
+          });
+      }
+    };
+    connection.onclose(function () {
+      connect();
+    });
+    connection.on('connected', function (id) {
+      connectionId = id;
+    });
+    PubSub.subscribe('test', (method, data) => {
+      connection.send("ClientToServer", "test", "data from client", connectionId, null);
+      console.log(method, data);
+    });
+    connection.on('ServerToClient', function (results) {
+      PubSub.publish(results.command, results);
+    });
+    connect();
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+*.bak
+
+#fe
+node_modules/
+dist/
+
+#be
+.vs/
+bin/
+obj/
+*.suo
+*.user
+*.db
+*.db-shm
+*.db-wal
+

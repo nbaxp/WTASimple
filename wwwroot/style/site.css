@@ -1,0 +1,45 @@
+html * {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  text-rendering: optimizeLegibility;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+}
+
+#app > .el-container {
+  height: 100%;
+}
+
+.el-container.body {
+  position: relative;
+  top: var(--el-header-height);
+  height: calc(100% - var(--el-header-height));
+  overflow: auto;
+}
+
+.el-header,
+.el-footer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.el-header {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--el-border-color);
+}
+.markdown-body {
+  box-sizing: border-box;
+  margin: 0 auto;
+}
