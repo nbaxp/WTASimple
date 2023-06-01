@@ -1,3 +1,15 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using System.Text.Unicode;
 using Autofac;
 using Coravel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,18 +28,6 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Diagnostics;
-using System.Globalization;
-using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Text.Unicode;
 using WTA.Application.Domain;
 using WTA.Infrastructure.Attributes;
 using WTA.Infrastructure.Authentication;
@@ -41,9 +41,9 @@ using WTA.Infrastructure.Localization;
 using WTA.Infrastructure.Mappers;
 using WTA.Infrastructure.Module;
 using WTA.Infrastructure.Options;
-using WTA.Infrastructure.Resources;
 using WTA.Infrastructure.SignalR;
 using WTA.Infrastructure.Swagger;
+using WTA.Resources;
 
 namespace WTA.Infrastructure;
 
@@ -63,7 +63,17 @@ public class WebApp
     private WebApp()
     {
         var path = Path.GetDirectoryName(AppContext.BaseDirectory)!;
-        Directory.GetFiles(path, $"{this.Prefix}*.dll").ForEach(o => this.Assemblies.Add(Assembly.LoadFrom(o)));
+        Directory.GetFiles(path, $"{this.Prefix}*.dll").ForEach(o =>
+        {
+            if (Assembly.GetEntryAssembly()!.Location == o)
+            {
+                this.Assemblies.Add(Assembly.GetEntryAssembly()!);
+            }
+            else
+            {
+                this.Assemblies.Add(Assembly.LoadFrom(o));
+            }
+        });
         this.DbSeedTypes = new Dictionary<Type, List<Type>>();
         this.DbConfigTypes = new Dictionary<Type, List<Type>>();
         var moduleTypes = this.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(BaseModule)));
@@ -345,12 +355,14 @@ public class WebApp
         UseSwagger(app);
         this.UseDbContext(app);
     }
+
     protected virtual void UseAuthorization(WebApplication app)
     {
         app.UseCors(this.EntryAssemblyName);
         app.UseAuthentication();
         app.UseAuthorization();
     }
+
     protected virtual void AddHttp(WebApplicationBuilder builder)
     {
         builder.Services.AddHttpClient();
@@ -379,6 +391,7 @@ public class WebApp
             options.MultipartBodyLengthLimit = long.MaxValue;
         });
     }
+
     protected virtual void AddLocalization(WebApplicationBuilder builder)
     {
         builder.Services.AddLocalization();
@@ -397,6 +410,7 @@ public class WebApp
             //options.RequestCultureProviders.Insert(0, new RouteDataRequestCultureProvider());
         });
     }
+
     protected virtual void UseLocalization(WebApplication app)
     {
         var localizationOptions = app.Services.GetService<IOptions<RequestLocalizationOptions>>()!.Value;
@@ -404,6 +418,7 @@ public class WebApp
         Thread.CurrentThread.CurrentCulture = localizationOptions.DefaultRequestCulture.Culture;
         Thread.CurrentThread.CurrentUICulture = localizationOptions.DefaultRequestCulture.UICulture;
     }
+
     protected void UseSwagger(WebApplication app)
     {
         app.UseSwagger();
@@ -458,7 +473,7 @@ public class WebApp
             IssuerSigningKey = issuerSigningKey,
             NameClaimType = nameof(ClaimTypes.Name),
             RoleClaimType = nameof(ClaimTypes.Role),
-            ClockSkew = TimeSpan.Zero,//default 300
+            ClockSkew = TimeSpan.FromSeconds(30),
         };
         builder.Services.AddSingleton(tokenValidationParameters);
         builder.Services.AddAuthentication(options =>

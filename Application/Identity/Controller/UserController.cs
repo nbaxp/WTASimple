@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WTA.Application.Domain;
 using WTA.Application.Identity.Domain;
-using WTA.Application.Identity.Models;
 using WTA.Infrastructure.Attributes;
 using WTA.Infrastructure.Authentication;
 using WTA.Infrastructure.Controllers;
@@ -24,7 +22,7 @@ public class UserController : GenericController<User>, IAuthenticationService
     [HttpPost]
     public AuthenticateResult Authenticate(string name, string operation)
     {
-        var query = Repository.AsNoTracking();
+        var query = this.Repository.AsNoTracking();
 
         var result = new AuthenticateResult
         {
@@ -54,7 +52,7 @@ public class UserController : GenericController<User>, IAuthenticationService
     }
 
     [HttpPost]
-    public UserInfoModel Info()
+    public User Info()
     {
         var user = this.Repository
             .AsNoTracking()
@@ -63,10 +61,6 @@ public class UserController : GenericController<User>, IAuthenticationService
             .ThenInclude(o => o.RolePermissions)
             .ThenInclude(o => o.Permission)
             .FirstOrDefault(o => o.UserName == this.User.Identity!.Name);
-        return new UserInfoModel
-        {
-            User = user,
-            Permissions = user.UserRoles.Select(o => o.Role).SelectMany(o => o.RolePermissions).Select(o => o.Permission).Distinct().ToList(),
-        };
+        return user!;
     }
 }

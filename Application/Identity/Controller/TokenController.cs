@@ -11,6 +11,7 @@ using WTA.Application.Identity.Models;
 using WTA.Infrastructure.Authentication;
 using WTA.Infrastructure.Controllers;
 using WTA.Infrastructure.Data;
+using WTA.Infrastructure.Extensions;
 using WTA.Infrastructure.Identity;
 
 namespace WTA.Application.Identity.Controllers;
@@ -43,76 +44,95 @@ public class TokenController : BaseController
         this._userRepository = userRepository;
     }
 
+    [HttpGet]
     [AllowAnonymous]
+    public object Create()
+    {
+        return typeof(LoginRequestModel).GetMetadataForType();
+    }
+
     [HttpPost]
+    [AllowAnonymous]
     public IActionResult Create([FromBody] LoginRequestModel model)
     {
-        var additionalClaims = new List<Claim> { new Claim(nameof(model.LocationId), model.LocationId.ToString()) };
-        if (model.TenantId != null)
+        if (ModelState.IsValid)
         {
-            var tenantQuery = this._tenantRepository.AsNoTracking();
-            var tenantItem = tenantQuery.FirstOrDefault(o => o.TenantId == model.TenantId) ?? throw new Exception("租户不存在");
-            additionalClaims.Add(new Claim(nameof(model.TenantId), model.TenantId?.ToString()!));
-        }
-        //
-        var userQuery = this._userRepository.Queryable();
-        var user = userQuery.FirstOrDefault(o => o.UserName == model.UserName);
-        if (user != null)
-        {
-            if (this._identityOptions.SupportsUserLockout)
+            try
             {
-                if (user.LockoutEnd.HasValue)
+                var additionalClaims = new List<Claim> { new Claim(nameof(model.TenantId), model.TenantId!) };
+                if (model.TenantId != null)
                 {
-                    if (user.LockoutEnd.Value >= DateTimeOffset.Now)
-                    {
-                        throw new Exception("用户处于锁定状态");
-                    }
-                    else
-                    {
-                        user.AccessFailedCount = 0;
-                        user.LockoutEnd = null;
-                        this._userRepository.SaveChanges();
-                    }
+                    var tenantQuery = this._tenantRepository.AsNoTracking();
+                    var tenantItem = tenantQuery.FirstOrDefault(o => o.TenantId == model.TenantId) ?? throw new Exception("租户不存在");
+                    additionalClaims.Add(new Claim(nameof(model.TenantId), model.TenantId?.ToString()!));
                 }
-            }
-
-            if (user.PasswordHash != this._passwordHasher.HashPassword(model.Password, user.SecurityStamp!))
-            {
-                user.AccessFailedCount++;
-                this._userRepository.SaveChanges();
-                if (user.AccessFailedCount == this._identityOptions.MaxFailedAccessAttempts)
+                //
+                var userQuery = this._userRepository.Queryable();
+                var user = userQuery.FirstOrDefault(o => o.UserName == model.UserName);
+                if (user != null)
                 {
-                    throw new Exception($"用户已锁定,{(user.LockoutEnd!.Value - DateTime.Now).TotalMinutes} 分钟后解除");
+                    if (this._identityOptions.SupportsUserLockout)
+                    {
+                        if (user.LockoutEnd.HasValue)
+                        {
+                            if (user.LockoutEnd.Value >= DateTimeOffset.Now)
+                            {
+                                throw new Exception("用户处于锁定状态");
+                            }
+                            else
+                            {
+                                user.AccessFailedCount = 0;
+                                user.LockoutEnd = null;
+                                this._userRepository.SaveChanges();
+                            }
+                        }
+                    }
+
+                    if (user.PasswordHash != this._passwordHasher.HashPassword(model.Password, user.SecurityStamp!))
+                    {
+                        user.AccessFailedCount++;
+                        this._userRepository.SaveChanges();
+                        if (user.AccessFailedCount == this._identityOptions.MaxFailedAccessAttempts)
+                        {
+                            throw new Exception($"用户已锁定,{(user.LockoutEnd!.Value - DateTime.Now).TotalMinutes} 分钟后解除");
+                        }
+                        else
+                        {
+                            throw new Exception($"密码错误,剩余尝试错误次数为 {this._identityOptions.MaxFailedAccessAttempts - user.AccessFailedCount}");
+                        }
+                    }
                 }
                 else
                 {
-                    throw new Exception($"密码错误,剩余尝试错误次数为 {this._identityOptions.MaxFailedAccessAttempts - user.AccessFailedCount}");
+                    throw new Exception("用户名或密码错误");
                 }
+                //
+                var roles = this._userRepository.AsNoTracking()
+                    .Where(o => o.UserName == model.UserName)
+                    .SelectMany(o => o.UserRoles)
+                    .Select(o => o.Role.Name)
+                    .ToList()
+                    .Select(o => new Claim(this._tokenValidationParameters.RoleClaimType, o));
+                additionalClaims.AddRange(roles);
+                var subject = CreateSubject(model.UserName, additionalClaims);
+                return Json(new LoginResponseModel
+                {
+                    AccessToken = CreateToken(subject, this._identityOptions.AccessTokenExpires),
+                    RefreshToken = CreateToken(subject, model.RememberMe ? TimeSpan.FromDays(365) : this._identityOptions.RefreshTokenExpires),
+                    ExpiresIn = (long)this._identityOptions.AccessTokenExpires.TotalSeconds
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return Problem(ex.ToString());
             }
         }
-        else
-        {
-            throw new Exception("用户名或密码错误");
-        }
-        //
-        var roles = this._userRepository.AsNoTracking()
-            .Where(o => o.UserName == model.UserName)
-            .SelectMany(o => o.UserRoles)
-            .Select(o => o.Role.Name)
-            .ToList()
-            .Select(o => new Claim(this._tokenValidationParameters.RoleClaimType, o));
-        additionalClaims.AddRange(roles);
-        var subject = CreateSubject(model.UserName, additionalClaims);
-        return Json(new LoginResponseModel
-        {
-            AccessToken = CreateToken(subject, this._identityOptions.AccessTokenExpires),
-            RefreshToken = CreateToken(subject, model.RememberMe ? TimeSpan.FromDays(365) : this._identityOptions.RefreshTokenExpires),
-            ExpiresIn = (long)this._identityOptions.AccessTokenExpires.TotalSeconds
-        });
+        return BadRequest(ModelState);
     }
 
-    [AllowAnonymous]
     [HttpPost]
+    [AllowAnonymous]
     public LoginResponseModel Refresh(string refreshToken)
     {
         var validationResult = this._jwtSecurityTokenHandler.ValidateTokenAsync(refreshToken, this._tokenValidationParameters).Result;
@@ -141,12 +161,19 @@ public class TokenController : BaseController
         var now = DateTime.UtcNow;
         var tokenDescriptor = new SecurityTokenDescriptor()
         {
+            // 签发者
             Issuer = this._identityOptions.Issuer,
+            // 接收方
             Audience = this._identityOptions.Audience,
+            // 凭据
             SigningCredentials = _credentials,
+            // 声明
             Subject = subject,
+            // 签发时间
             IssuedAt = now,
+            // 生效时间
             NotBefore = now,
+            // UTC 过期时间
             Expires = now.Add(timeout),
         };
         var securityToken = this._jwtSecurityTokenHandler.CreateJwtSecurityToken(tokenDescriptor);

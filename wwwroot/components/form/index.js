@@ -1,11 +1,11 @@
 import html from 'html';
-import { reactive } from 'vue';
+import { ref, reactive } from 'vue';
 
 export default {
-  name:'AppForm',
-  template: html`<el-form :model=model>
+  name: 'AppForm',
+  template: html`<el-form ref="formRef" :model="model">
       <template v-for="(item,key) in schema.properties">
-        <el-form-item :label="item.title+'：'">
+        <el-form-item :label="item.title+'：'" :prop="key" :rules="getRules(schema,item,model)">
           <el-input :placeholder="item.title" v-model="model[key]" type="number" v-if="item.type==='number'" />
           <el-input-number :placeholder="item.title" v-model="model[key]" :precision="0" v-else-if="item.type==='integer'" />
           <el-switch v-model="model[key]" type="checked" v-else-if="item.type==='boolean'"/>
@@ -13,7 +13,7 @@ export default {
         </el-form-item>
       </template>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit"><slot>确定</slot></el-button>
+        <el-button type="primary" @click="submit" :disabled="loading"><slot>确定</slot></el-button>
       </el-form-item>
     </el-form>`,
   props: {
@@ -21,15 +21,83 @@ export default {
   },
   emits: ['submit'],
   setup(props, context) {
-    const model = reactive(props.modelValue.data);
     const schema = reactive(props.modelValue.schema);
-    const onSubmit = () => {
-      context.emit('submit');
+    const model = reactive(props.modelValue.data);
+    const errors = reactive(props.modelValue.errors);
+    // ref
+    const formRef = ref(null);
+    const loading = ref(false);
+    //
+    const getProp = (key) => {
+
+    };
+    //
+    const getRules = (parentSchema, property, data) => {
+      if (!property.rules) {
+        return null;
+      }
+      const rules = [...(Array.isArray(property.rules) ? property.rules : [property.rules])].map((o) =>
+        JSON.parse(JSON.stringify(o)),
+      );
+      Object.values(rules).forEach((rule) => {
+        rule.data = data;
+        rule.schema = parentSchema;
+        rule.title = rule.title ?? property.title;
+        rule.type = property.type;
+        if (rule.validator) {
+          rule.validator = validators[rule.validator];
+        }
+        if (!rule.message) {
+          if (rule.required) {
+            rule.message = format(schema.messages.required, property.title);
+          } else if (rule.pattern) {
+            rule.message = format(schema.messages.pattern, property.title);
+          } else if (property.type === 'string' || property.type === 'number' || property.type === 'array') {
+            if (rule.len) {
+              rule.message = format(schema.messages[property.type].len, property.title, rule.len);
+            } else if (rule.min) {
+              rule.message = format(schema.messages[property.type].min, property.title, rule.min);
+            } else if (rule.max) {
+              rule.message = format(schema.messages[property.type].max, property.title, rule.max);
+            } else if (rule.range) {
+              rule.message = format(schema.messages[property.type].range, property.title, rule.range);
+            }
+          }
+        }
+      });
+      return rules;
+    };
+    // reset
+    const reset = () => {
+      formRef.value.resetFields();
+    };
+    // validate
+    const validate = async () => {
+      return formRef.value.validate();
+    };
+    // submit
+    const submit = async () => {
+      try {
+        const valid = await validate();
+        if (valid) {
+          loading.value = true;
+          context.emit('submit');
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        loading.value = false;
+      }
     };
     return {
+      formRef,
+      loading,
       schema,
       model,
-      onSubmit
+      errors,
+      getProp,
+      getRules,
+      submit
     }
   }
 }

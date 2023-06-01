@@ -12,6 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Resource.cs" />
+    <EmbeddedResource Include="Resources\zh.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Autofac" Version="7.0.1" />
     <PackageReference Include="Autofac.Configuration" Version="6.0.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />

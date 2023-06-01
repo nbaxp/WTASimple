@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import settings from '../config/settings.js';
+import { getUser } from '../api/user.js';
 
 const useAppStore = defineStore('app', {
   state: () => {
@@ -14,6 +15,9 @@ const useAppStore = defineStore('app', {
     resetSettings() {
       Object.assign(this.settings, settings);
     },
+    async getUser() {
+      this.user = await getUser();
+    }
   },
 });
 

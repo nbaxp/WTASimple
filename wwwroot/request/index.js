@@ -1,45 +1,50 @@
 import qs from '../lib/qs/shim.js';
+import { isLogin } from '../api/user.js';
 
-const get = async (url,data)=>
-{
+const addToken = async (options) => {
+  if (isLogin()) {
+    options.headers.Authorization = `Bearer ${localStorage.getItem('access_token')}`;
+  }
+};
+
+const getResult = async (response) => {
+  const messages = new Map([[200, '操作成功'], [201, '已创建'], [204, '无返回值'], [400, '请求参数错误'], [401, '未登录'], [403, '权限不足'], [500, '服务器异常']]);
+  const result = {
+    status: response.status,
+    message: messages.get(response.status)
+  };
+  if (response.status == 200) {
+    result.data = await response.json();
+  }
+  else if (response.status === 400 || response.status === 500) {
+    result.errors = await response.json();
+  }
+  return result;
+};
+
+const get = async (url, data, options) => {
   url = `${url}?${qs.stringify(data)}`;
-  return await (await fetch(url,{
-    method:'GET',
-    headers:{
-      'Content-type': 'application/json',
-      'Authorization':localStorage.getItem("token")
-    }
-  })).tojson();
+  const defaultOptions = {
+    headers: {}
+  };
+  if (options) { Object.assign(defaultOptions, options); }
+  addToken(defaultOptions);
+  const response = await fetch(url, defaultOptions);
+  return getResult(response);
 }
 
-const post = async (url,data)=>
-{
-  const init = {
-    method:'POST',
-    body:JSON.stringify(data),
-    headers:{
-      'Content-type': 'application/json',
-      'Authorization':localStorage.getItem("access_token")
+const post = async (url, data, options) => {
+  const defaultOptions = {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
     }
   };
-  const response =await fetch(url,init);
-  if(response.status===400)
-  {
-    console.log('输入错误');
-  }
-  else if(response.status===401)
-  {
-    alert('未登录');
-  }
-  else if(response.status==403)
-  {
-    alert('权限不足');
-  }
-  else if(response.status===500)
-  {
-    alert('服务端异常');
-  }
-  return await response.json();
+  if (options) { Object.assign(defaultOptions, options); }
+  addToken(defaultOptions);
+  const response = await fetch(url, defaultOptions);
+  return getResult(response);
 }
 
-export {get,post}
+export { get, post }
