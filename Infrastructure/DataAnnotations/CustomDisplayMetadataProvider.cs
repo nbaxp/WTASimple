@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 
 namespace WTA.Infrastructure.DataAnnotations;
 
-public class DefaultDisplayMetadataProvider : IDisplayMetadataProvider
+public class CustomDisplayMetadataProvider : IDisplayMetadataProvider
 {
     public void CreateDisplayMetadata(DisplayMetadataProviderContext context)
     {
@@ -21,6 +21,10 @@ public class DefaultDisplayMetadataProvider : IDisplayMetadataProvider
                 if (attribute is DataTypeAttribute data && attribute.ErrorMessage != null)
                 {
                     attribute.ErrorMessage = $"DataTypeAttribute_{data.GetDataTypeName()}";
+                }
+                else if (item is RequiredAttribute required)
+                {
+                    required.ErrorMessage = nameof(RequiredAttribute);
                 }
                 else
                 {

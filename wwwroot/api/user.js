@@ -12,6 +12,7 @@ const isLogin = async () => {
       isLogin = true;
     }
     else {
+      localStorage.removeItem('access_token');
       var refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken != null) {
         const refreshRespoonse = await fetch('/token/refresh', {

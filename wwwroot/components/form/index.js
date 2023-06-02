@@ -78,11 +78,11 @@ export default {
     // submit
     const submit = async () => {
       try {
-        const valid = await validate();
-        if (valid) {
-          loading.value = true;
-          context.emit('submit');
-        }
+        //const valid = await validate();
+        //if (valid) {
+        loading.value = true;
+        context.emit('submit');
+        //}
       } catch (error) {
         console.error(error);
       } finally {

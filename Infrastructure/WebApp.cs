@@ -17,6 +17,9 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -222,9 +225,17 @@ public class WebApp
             options.AreaViewLocationFormats.Add("/Views/Shared/{0}" + RazorViewEngine.ViewExtension);
         });
         builder.Services.AddRouting(options => options.ConstraintMap["slugify"] = typeof(SlugifyParameterTransformer));
+        builder.Services.AddSingleton<IModelMetadataProvider, CustomModelMetaDataProvider>();
+        builder.Services.AddSingleton<ValidationAttributeAdapterProvider>();
         builder.Services.AddMvc(o =>
         {
-            o.ModelMetadataDetailsProviders.Insert(0, new DefaultDisplayMetadataProvider());
+            //SuppressImplicitRequiredAttributeForNonNullableReferenceTypes 为 false 时 D
+            //ataAnnotationsMetadataProvider 中会自动为不可空引用类型添加一个无法自定义 ErrorMessage 的 RequiredAttribute
+            //因此禁用此行为，并在 CustomValidationMetadataProvider 中手动重新添加 RequiredAttribute
+            o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+            o.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider());
+            o.ModelMetadataDetailsProviders.Insert(0, new CustomDisplayMetadataProvider());
+            o.ModelMetadataDetailsProviders.Add( new CustomValidationMetadataProvider());
             o.Conventions.Add(new ControllerModelConvention());
             o.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
             o.Conventions.Add(new GenericControllerRouteConvention());
