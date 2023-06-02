@@ -1,11 +1,11 @@
 import html from 'html';
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 
 export default {
   name: 'AppForm',
-  template: html`<el-form ref="formRef" :model="model">
-      <template v-for="(item,key) in schema.properties">
-        <el-form-item :label="item.title+'：'" :prop="key" :rules="getRules(schema,item,model)">
+  template: html`<el-form ref="formRef" :model="model.data">
+      <template v-for="(item,key) in model.schema.properties">
+        <el-form-item :label="item.title+'：'" :prop="getProp(key)" :rules="getRules(model.schema,item,model)" :error="getError(key)">
           <el-input :placeholder="item.title" v-model="model[key]" type="number" v-if="item.type==='number'" />
           <el-input-number :placeholder="item.title" v-model="model[key]" :precision="0" v-else-if="item.type==='integer'" />
           <el-switch v-model="model[key]" type="checked" v-else-if="item.type==='boolean'"/>
@@ -21,16 +21,22 @@ export default {
   },
   emits: ['submit'],
   setup(props, context) {
-    const schema = reactive(props.modelValue.schema);
-    const model = reactive(props.modelValue.data);
-    const errors = reactive(props.modelValue.errors);
+    // init
+    const model = reactive(props.modelValue);
+    watch(model, (value) => {
+      context.emit('update:modelValue', value);
+    });
     // ref
     const formRef = ref(null);
     const loading = ref(false);
     //
     const getProp = (key) => {
-
+      return key;
     };
+    //
+    const getError = (key) => {
+      return model.errors[key];
+    }
     //
     const getRules = (parentSchema, property, data) => {
       if (!property.rules) {
@@ -92,10 +98,9 @@ export default {
     return {
       formRef,
       loading,
-      schema,
       model,
-      errors,
       getProp,
+      getError,
       getRules,
       submit
     }

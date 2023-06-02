@@ -116,7 +116,7 @@ public static class JsonSchemaExtensions
         var actionContext = new ActionContext { HttpContext = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext! };
         var provider = new EmptyModelMetadataProvider();
         var modelValidationContextBase = new ModelValidationContextBase(actionContext, meta, new EmptyModelMetadataProvider());
-        if (pm.IsRequired && !pm.Attributes.Attributes.Any(o => o.GetType() == typeof(RequiredAttribute)))
+        if (pm.IsRequired && !pm.IsNullableValueType && !pm.UnderlyingOrModelType.IsValueType && !pm.Attributes.Attributes.Any(o => o.GetType() == typeof(RequiredAttribute)))
         {
             var message = string.Format(CultureInfo.InvariantCulture, localizer.GetString(nameof(RequiredAttribute)).Value, title);
             rules.Add(new Dictionary<string, object> { { "required", true }, { "message", message } });

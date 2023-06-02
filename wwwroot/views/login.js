@@ -40,6 +40,7 @@ export default {
     const submit = async () => {
       const result = await login(model.action, model.data);
       if (result.errors) {
+        //Object.assign(model.errors, result.errors);
         model.errors = result.errors;
       }
     };

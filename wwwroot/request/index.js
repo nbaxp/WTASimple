@@ -22,6 +22,23 @@ const getResult = async (response) => {
   return result;
 };
 
+const request = async (url, data, options) => {
+  if (options && options.method === 'GET') {
+    return await get(url, data, options);
+  }
+  const defaultOptions = {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+  if (options) { Object.assign(defaultOptions, options); }
+  addToken(defaultOptions);
+  const response = await fetch(url, defaultOptions);
+  return getResult(response);
+};
+
 const get = async (url, data, options) => {
   url = `${url}?${qs.stringify(data)}`;
   const defaultOptions = {
@@ -47,4 +64,4 @@ const post = async (url, data, options) => {
   return getResult(response);
 }
 
-export { get, post }
+export { request, get, post }

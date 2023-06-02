@@ -128,7 +128,7 @@ public class TokenController : BaseController
                 return Problem(ex.ToString());
             }
         }
-        return BadRequest(ModelState);
+        return BadRequest(ModelState.ToErrors());
     }
 
     [HttpPost]
