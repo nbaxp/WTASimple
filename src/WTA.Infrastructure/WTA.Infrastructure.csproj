@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\en.json" />
+    <EmbeddedResource Include="Resources\zh.json" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\WTA.Application\WTA.Application.csproj" />
+    <ProjectReference Include="..\WTA.Shared\WTA.Shared.csproj" />
+  </ItemGroup>
+  
+</Project>

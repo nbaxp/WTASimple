@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\WTA.Shared\WTA.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
