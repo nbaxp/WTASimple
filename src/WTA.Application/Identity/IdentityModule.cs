@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Builder;
-using WTA.Application.Domain;
+using WTA.Application.Identity.Entities;
 using WTA.Shared;
 using WTA.Shared.Module;
 

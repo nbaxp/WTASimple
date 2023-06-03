@@ -1,18 +1,18 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 using WTA.Shared.Extensions;
 
 namespace WTA.Shared.Data;
 
-public abstract class BaseDbContext : DbContext
+public abstract class BaseDbContext<T> : DbContext where T : DbContext
 {
     public static readonly ILoggerFactory DefaultLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
-    public BaseDbContext(DbContextOptions options) : base(options)
+    public BaseDbContext(DbContextOptions<T> options) : base(options)
     {
     }
 

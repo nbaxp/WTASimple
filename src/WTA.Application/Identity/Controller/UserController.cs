@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WTA.Application.Domain;
-using WTA.Application.Identity.Domain;
+using WTA.Application.Identity.Entities;
 using WTA.Shared.Attributes;
 using WTA.Shared.Authentication;
 using WTA.Shared.Controllers;

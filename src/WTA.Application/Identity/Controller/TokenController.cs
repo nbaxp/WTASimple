@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using WTA.Application.Domain;
-using WTA.Application.Identity.Domain;
+using WTA.Application.Identity.Entities;
 using WTA.Application.Identity.Models;
+using WTA.Application.Tenants.Entities;
 using WTA.Shared.Authentication;
 using WTA.Shared.Controllers;
 using WTA.Shared.Data;
@@ -25,7 +25,7 @@ public class TokenController : BaseController
     private readonly IPasswordHasher _passwordHasher;
     private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
     private readonly SigningCredentials _credentials;
-    private readonly IRepository<TenantItem> _tenantRepository;
+    private readonly IRepository<Tenant> _tenantRepository;
     private readonly IRepository<User> _userRepository;
 
     public TokenController(TokenValidationParameters tokenValidationParameters,
@@ -33,7 +33,7 @@ public class TokenController : BaseController
         SigningCredentials credentials,
         IOptions<IdentityOptions> identityOptions,
         IPasswordHasher passwordHasher,
-        IRepository<TenantItem> _tenantRepository,
+        IRepository<Tenant> _tenantRepository,
         IRepository<User> userRepository)
     {
         this._tokenValidationParameters = tokenValidationParameters;

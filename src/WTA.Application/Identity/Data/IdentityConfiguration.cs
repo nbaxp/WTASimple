@@ -1,7 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WTA.Application.Domain;
-using WTA.Application.Identity.Domain;
+using WTA.Application.Identity.Entities;
 using WTA.Shared.Attributes;
 using WTA.Shared.Extensions;
 
@@ -14,7 +13,6 @@ public class IdentityConfiguration : IEntityTypeConfiguration<Department>,
      IEntityTypeConfiguration<Permission>,
      IEntityTypeConfiguration<UserRole>,
      IEntityTypeConfiguration<RolePermission>,
-     IEntityTypeConfiguration<TenantItem>,
      IEntityTypeConfiguration<JobItem>
 {
     public void Configure(EntityTypeBuilder<Department> builder)
@@ -55,10 +53,6 @@ public class IdentityConfiguration : IEntityTypeConfiguration<Department>,
     }
 
     public void Configure(EntityTypeBuilder<JobItem> builder)
-    {
-    }
-
-    public void Configure(EntityTypeBuilder<TenantItem> builder)
     {
     }
 }

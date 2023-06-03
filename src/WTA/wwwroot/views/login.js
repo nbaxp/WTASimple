@@ -14,7 +14,7 @@ export default {
       </el-main>
     </el-container>`,
   async setup() {
-    const schema = (await get('/token/create')).data;
+    const schema = (await get('token/create')).data;
     // const schema = {
     //   title: '登录',
     //   type: 'object',
@@ -35,7 +35,7 @@ export default {
       schema,
       data: schemaToModel(schema),
       errors: {},
-      action: '/token/create'
+      action: 'token/create'
     });
     const submit = async () => {
       const result = await login(model.action, model.data);

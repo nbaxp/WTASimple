@@ -86,7 +86,7 @@ public class WebApp
         {
             // 获取数据上下文类型
             var dbContextTypes = this.Assemblies.SelectMany(o => o.GetTypes())
-            .Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(BaseDbContext)))
+            .Where(o => o.IsClass && !o.IsAbstract && o.GetBaseClasses().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(BaseDbContext<>)))
             .Where(o => (o.GetCustomAttributes().Any(a => a.GetType().IsGenericType && a.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>) && a.GetType().GenericTypeArguments.Any(p => p == mt))))
             .ToList();
             var moduleDbContextTypes = new Dictionary<Type, List<Type>>();
@@ -597,7 +597,9 @@ public class WebApp
             {
                 Action<DbContextOptionsBuilder> action = a =>
                 {
-                    a.UseSqlite(builder.Configuration.GetConnectionString(module.Key.Name.TrimEnd("Module")));
+                    var connectionStringKey = dbContextType.Name.TrimEnd("DbContext");
+                    var connectionString = builder.Configuration.GetConnectionString(connectionStringKey);
+                    a.UseSqlite(connectionString);
                 };
                 method?.MakeGenericMethod(dbContextType).Invoke(null, new object[] { builder.Services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
                 var dbSeedType = typeof(IDbSeed<>).MakeGenericType(dbContextType);

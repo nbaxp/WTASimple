@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using WTA.Application.Domain;
-using WTA.Application.Identity.Domain;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using WTA.Application.Identity.Entities;
 using WTA.Shared;
 using WTA.Shared.Application;
 using WTA.Shared.Attributes;

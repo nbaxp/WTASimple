@@ -1,7 +1,6 @@
-﻿using WTA.Application.Identity.Domain;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Domain;
+namespace WTA.Application.Identity.Entities;
 
 public class Permission : BaseTreeEntity<Permission>
 {

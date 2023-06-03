@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Domain;
+namespace WTA.Application.Identity.Entities;
 
 [Display(Name = "用户")]
 [UserCenter]

@@ -1,4 +1,4 @@
-using WTA.Application.Domain;
+using WTA.Application.Identity.Entities;
 
 namespace WTA.Application.Identity.Models;
 

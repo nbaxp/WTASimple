@@ -1,6 +1,6 @@
-﻿using WTA.Shared.Domain;
+using WTA.Shared.Domain;
 
-namespace WTA.Application.Domain;
+namespace WTA.Application.Identity.Entities;
 
 public class RolePermission : BaseEntity
 {
