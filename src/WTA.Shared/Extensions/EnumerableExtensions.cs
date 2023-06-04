@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Extensions;
+namespace WTA.Shared.Extensions;
 
 public static class EnumerableExtensions
 {

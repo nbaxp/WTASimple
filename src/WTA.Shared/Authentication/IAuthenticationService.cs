@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Authentication;
+namespace WTA.Shared.Authentication;
 
 public interface IAuthenticationService
 {

@@ -1,8 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Swashbuckle.AspNetCore.Annotations;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection;
 
 namespace WTA.Shared.Extensions;
 

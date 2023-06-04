@@ -1,10 +1,14 @@
+using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 using WTA.Shared.Extensions;
+using WTA.Shared.Tenants;
 
 namespace WTA.Shared.Data;
 
@@ -12,8 +16,13 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
 {
     public static readonly ILoggerFactory DefaultLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
+    private readonly string _tablePrefix;
+    public string? _tenantId { get; private set; }
+
     public BaseDbContext(DbContextOptions<T> options) : base(options)
     {
+        this._tablePrefix = this.GetTablePrefix();
+        this._tenantId = this.GetService<ITenantService>()?.GetTenantId();
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -25,89 +34,67 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        #region 批量设置
-
-        //批量添加实体
+        //默认配置
         WebApp.Current.ModuleTypes.Where(o => o.Value.ContainsKey(this.GetType()))
             .Select(o => o.Value.GetValueOrDefault(this.GetType()))
             .Where(o => o != null)
-            .ForEach(o => o!.ForEach(t => modelBuilder.Entity(t)));
-
-        var getTablePrefix = (Type contextType) =>
+        .ForEach(o => o!.ForEach(entityType =>
         {
-            var prefix = contextType.GetCustomAttributes()
-                .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
-                .Select(o => o as ITypeAttribute)
-                .Select(o => o!.Type.Name)
-                .FirstOrDefault()?
-                .TrimEnd("Module");
-
-            if (!string.IsNullOrEmpty(prefix))
+            var entityTypeBuilder = modelBuilder.Entity(entityType);
+            //实体
+            if (entityType.IsAssignableTo(typeof(BaseEntity)))
             {
-                prefix = $"{prefix}_";
-            }
-            return prefix;
-        };
-        // 批量设置实体
-        modelBuilder.Model.GetEntityTypes().Where(o => o.ClrType.IsAssignableTo(typeof(BaseEntity))).ToList().ForEach(item =>
-        {
-            // 设置Id
-            modelBuilder.Entity(item.ClrType).HasKey(nameof(BaseEntity.Id));
-            modelBuilder.Entity(item.ClrType).Property(nameof(BaseEntity.Id)).ValueGeneratedNever();
-            // 设置行版本号
-            modelBuilder.Entity(item.ClrType).Property(nameof(BaseEntity.ConcurrencyStamp)).ValueGeneratedNever();
-            // 设置扩展属性
-            var vc = new ValueComparer<Dictionary<string, string>>(
-                (v1, v2) => v1 != null && v2 != null && v1.SequenceEqual(v2),
-                o => o.GetHashCode()
-                );
-            modelBuilder.Entity(item.ClrType).Property<Dictionary<string, string>>(nameof(BaseEntity.Properties)).
-                HasConversion(v => v.ToJson(),
-                v => v.FromJson<Dictionary<string, string>>()!,
-                vc);
-            // 配置表名称和注释
-            modelBuilder.Entity(item.ClrType, builder =>
-            {
-                var prefix = getTablePrefix(this.GetType());
-                var tableName = $"{prefix}{item.GetTableName()}";
-                builder.ToTable(tableName);
-                builder.ToTable(t => t.HasComment(item.ClrType.GetDisplayName()));
-                //
-                foreach (var prop in item.GetProperties())
+                //租户过滤
+                var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.TenantId));
+                var parameter = Expression.Parameter(entityType, "p");
+                var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
+                Expression<Func<string>> tenantExpression = () => this._tenantId!;
+                var right = tenantExpression.Body;
+                var filter = Expression.Lambda(Expression.Equal(left, right), parameter);
+                entityTypeBuilder.HasQueryFilter(filter);
+                //主键
+                entityTypeBuilder.HasKey(nameof(BaseEntity.Id));
+                entityTypeBuilder.Property(nameof(BaseEntity.Id)).ValueGeneratedNever();
+                //行版本号
+                entityTypeBuilder.Property(nameof(BaseEntity.ConcurrencyStamp)).ValueGeneratedNever();
+                //扩展属性
+                entityTypeBuilder.Property<Dictionary<string, string>>(nameof(BaseEntity.Properties)).
+                HasConversion(v => v.ToJson(), v => v.FromJson<Dictionary<string, string>>()!, DictionaryValueComparer);
+                //表名
+                entityTypeBuilder.ToTable($"{this._tablePrefix}{entityTypeBuilder.Metadata.GetTableName()}");
+                //属性
+                entityTypeBuilder.Metadata.GetProperties().ForEach(prop =>
                 {
                     if (prop.PropertyInfo != null)
                     {
-                        builder.Property(prop.Name).HasComment(prop.PropertyInfo?.GetDisplayName());
+                        //列注释
+                        entityTypeBuilder.Property(prop.Name).HasComment(prop.PropertyInfo?.GetDisplayName());
                         if (prop.PropertyInfo!.PropertyType.IsEnum)
                         {
-                            builder.Property(prop.Name).HasConversion<string>();
+                            //枚举存为字符串
+                            entityTypeBuilder.Property(prop.Name).HasConversion<string>();
                         }
                     }
+                });
+                //TreeEntity
+                if (entityType.IsAssignableTo(typeof(BaseTreeEntity<>).MakeGenericType(entityType)))
+                {
+                    entityTypeBuilder.HasOne(nameof(BaseTreeEntity<BaseEntity>.Parent))
+                        .WithMany(nameof(BaseTreeEntity<BaseEntity>.Children))
+                        .HasForeignKey(new string[] { nameof(BaseTreeEntity<BaseEntity>.ParentId) })
+                        .OnDelete(DeleteBehavior.NoAction);
+                    entityTypeBuilder.Property(nameof(BaseTreeEntity<BaseEntity>.Name)).IsRequired();
+                    entityTypeBuilder.Property(nameof(BaseTreeEntity<BaseEntity>.Number)).IsRequired().HasMaxLength(64);
+                    entityTypeBuilder.Property(nameof(BaseTreeEntity<BaseEntity>.InternalPath)).IsRequired();
+                    entityTypeBuilder.HasIndex(nameof(BaseTreeEntity<BaseEntity>.Number)).IsUnique();
                 }
-            });
-            // 配置 TreeEntity
-            if (item.ClrType.IsAssignableTo(typeof(BaseTreeEntity<>).MakeGenericType(item.ClrType)))
-            {
-                modelBuilder.Entity(item.ClrType).HasOne(nameof(BaseTreeEntity<BaseEntity>.Parent))
-                    .WithMany(nameof(BaseTreeEntity<BaseEntity>.Children))
-                    .HasForeignKey(new string[] { nameof(BaseTreeEntity<BaseEntity>.ParentId) })
-                    .OnDelete(DeleteBehavior.NoAction);
-                modelBuilder.Entity(item.ClrType).Property(nameof(BaseTreeEntity<BaseEntity>.Name)).IsRequired();
-                modelBuilder.Entity(item.ClrType).Property(nameof(BaseTreeEntity<BaseEntity>.Number)).IsRequired().HasMaxLength(64);
-                modelBuilder.Entity(item.ClrType).Property(nameof(BaseTreeEntity<BaseEntity>.InternalPath)).IsRequired();
-                modelBuilder.Entity(item.ClrType).HasIndex(nameof(BaseTreeEntity<BaseEntity>.Number)).IsUnique();
             }
-        });
-
-        //批量设置视图
-        modelBuilder.Model.GetEntityTypes().Where(o => o.ClrType.IsAssignableTo(typeof(BaseViewEntity))).ToList().ForEach(item =>
-        {
-            var prefix = getTablePrefix(this.GetType());
-            var viewName = $"{prefix}{item.ClrType.Name}";
-            modelBuilder.Entity(item.ClrType).HasNoKey().ToView(viewName);
-        });
-
-        #endregion 批量设置
+            else if (entityType.IsAssignableTo(typeof(BaseViewEntity)))
+            {
+                //视图
+                entityTypeBuilder.HasNoKey().ToView($"{this._tablePrefix}{entityType.Name}");
+            }
+        }));
 
         //自定义配置
         var applyEntityConfigurationMethod = typeof(ModelBuilder)
@@ -135,5 +122,34 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                 }
             });
         }
+    }
+
+    public override int SaveChanges()
+    {
+        return base.SaveChanges();
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    private static readonly ValueComparer<Dictionary<string, string>> DictionaryValueComparer = new((v1, v2) => v1 != null && v2 != null && v1.SequenceEqual(v2),
+                o => o.GetHashCode());
+
+    private string GetTablePrefix()
+    {
+        var prefix = this.GetType().GetCustomAttributes()
+                       .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
+                       .Select(o => o as ITypeAttribute)
+                       .Select(o => o!.Type.Name)
+                       .FirstOrDefault()?
+                       .TrimEnd("Module");
+
+        if (!string.IsNullOrEmpty(prefix))
+        {
+            prefix = $"{prefix}_";
+        }
+        return prefix ?? "";
     }
 }

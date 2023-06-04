@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using System.Text.Unicode;
 using Autofac;
 using Coravel;
@@ -25,9 +24,9 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -198,12 +197,6 @@ public class WebApp
 
     public virtual void ConfigureServices(WebApplicationBuilder builder)
     {
-        // 添加默认服务
-        this.AddDefaultServices(builder);
-        // 添加默认配置
-        this.AddDefaultOptions(builder);
-        // 添加数据上下文
-        this.AddDbContext(builder);
         // 配置依赖注入
         //builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory(containerBuilder =>
         //{
@@ -221,6 +214,10 @@ public class WebApp
                 configBuilder.WriteTo.Http(logServer, null);
             }
         }, writeToProviders: true);
+        builder.Host.UseDefaultServiceProvider((context, options) =>
+        {
+            options.ValidateOnBuild = false;
+        });
         // 添加 JWT
         AddJwtAuthentication(builder);
         // 添加 JSON
@@ -231,15 +228,20 @@ public class WebApp
         AddLocalization(builder);
         // 添加 MVC
         AddMvc(builder, defaultJsonOptions);
-        // 添加缓存
-        builder.Services.AddMemoryCache();
         // 添加 SignalR
         AddSignalR(builder);
         //Embed wwwroot
         builder.Services.ConfigureOptions(new EmbeddedConfigureOptions());
         // 添加 Swagger
         AddSwagger(builder);
-
+        // 添加默认服务
+        this.AddDefaultServices(builder);
+        // 添加默认配置
+        this.AddDefaultOptions(builder);
+        // 添加缓存
+        builder.Services.AddMemoryCache();
+        // 添加数据上下文
+        this.AddDbContext(builder);
         // 定时任务
         builder.Services.AddScheduler();
     }
@@ -257,7 +259,16 @@ public class WebApp
     }
 
     public virtual void AddMvc(WebApplicationBuilder builder, JsonSerializerOptions defaultJsonOptions)
-    {
+    {        // 配置路由
+        builder.Services.AddRouting(options => options.ConstraintMap["slugify"] = typeof(SlugifyParameterTransformer));
+        // 配置 CORS
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("CorsPolicy", builder =>
+            {
+                builder.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+            });
+        });
         builder.Services.Configure<RazorViewEngineOptions>(options =>
         {
             options.ViewLocationFormats.Add("/Views/{1}/{0}" + RazorViewEngine.ViewExtension);
@@ -322,16 +333,6 @@ public class WebApp
         })
         .ConfigureApplicationPartManager(o => o.FeatureProviders.Add(new GenericControllerFeatureProvider()))
         .AddControllersAsServices();
-        // 配置路由
-        builder.Services.AddRouting(options => options.ConstraintMap["slugify"] = typeof(SlugifyParameterTransformer));
-        // 配置 CORS
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("CorsPolicy", builder =>
-            {
-                builder.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
-            });
-        });
     }
 
     public virtual JsonSerializerOptions AddJson(WebApplicationBuilder builder)
@@ -398,13 +399,13 @@ public class WebApp
         app.UseStaticFiles();
         app.UseRouting();
         UseLocalization(app);
+        app.UseRouting();
+        UseAuthorization(app);
+        app.MapDefaultControllerRoute();
         app.MapHub<PageHub>("/api/hub");
         app.UseCors();// must after maphub
         UseSwagger(app);
         UseDbContext(app);
-        app.UseRouting();
-        UseAuthorization(app);
-        app.MapDefaultControllerRoute();
     }
 
     protected virtual void UseAuthorization(WebApplication app)
@@ -550,8 +551,18 @@ public class WebApp
                         }
                         else
                         {
-                            var descriptor = new ServiceDescriptor(implementation.ServiceType, type, implementation.Lifetime);
-                            builder.Services.Add(descriptor);
+                            if (implementation.Lifetime == ServiceLifetime.Singleton)
+                            {
+                                builder.Services.TryAddSingleton(implementation.ServiceType, type);
+                            }
+                            else if (implementation.Lifetime == ServiceLifetime.Scoped)
+                            {
+                                builder.Services.TryAddScoped(implementation.ServiceType, type);
+                            }
+                            else
+                            {
+                                builder.Services.TryAddTransient(implementation.ServiceType, type);
+                            }
                         }
                     }
                 }
@@ -595,11 +606,11 @@ public class WebApp
         {
             module.Value.Keys.ForEach(dbContextType =>
             {
-                Action<DbContextOptionsBuilder> action = a =>
+                Action<DbContextOptionsBuilder> action = optionsBuilder =>
                 {
                     var connectionStringKey = dbContextType.Name.TrimEnd("DbContext");
                     var connectionString = builder.Configuration.GetConnectionString(connectionStringKey);
-                    a.UseSqlite(connectionString);
+                    optionsBuilder.UseSqlite(connectionString);
                 };
                 method?.MakeGenericMethod(dbContextType).Invoke(null, new object[] { builder.Services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
                 var dbSeedType = typeof(IDbSeed<>).MakeGenericType(dbContextType);
@@ -612,95 +623,8 @@ public class WebApp
         builder.Services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
     }
 
-    private void UseDbContext(WebApplication app)
+    public virtual void UseDbContext(WebApplication app)
     {
-        using var scope = app.Services.CreateScope();
-        var serviceProvider = scope.ServiceProvider;
-        this.ModuleTypes.ForEach(module =>
-        {
-            var moduleType = module.Key;
-            if (WebApp.Current.ModuleTypes.TryGetValue(moduleType, out var dbContextTypes))
-            {
-                dbContextTypes.Keys.ForEach(dbContextType =>
-                {
-                    var contextName = dbContextType.Name;
-                    if (serviceProvider.GetRequiredService(dbContextType) is DbContext initDbContext)
-                    {
-                        var dbCreator = (initDbContext.GetService<IRelationalDatabaseCreator>() as RelationalDatabaseCreator)!;
-                        if (!dbCreator.Exists())
-                        {
-                            dbCreator.Create();
-                            var createSql = "CREATE TABLE EFDbContext(Id varchar(255) NOT NULL,Hash varchar(255),Date datetime  NOT NULL,PRIMARY KEY (Id));";
-                            initDbContext.Database.ExecuteSqlRaw(createSql);
-                        }
-                    }
-                    if (serviceProvider.GetRequiredService(dbContextType) is DbContext context)
-                    {
-                        using var transaction = context.Database.BeginTransaction();
-                        try
-                        {
-                            context.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
-                            var dbCreator = (context.GetService<IRelationalDatabaseCreator>() as RelationalDatabaseCreator)!;
-                            var sql = dbCreator.GenerateCreateScript();
-                            var md5 = sql.ToMd5();
-                            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location!)!, "scripts");
-                            Directory.CreateDirectory(path);
-                            using var sw = File.CreateText(Path.Combine(path, $"db.{context.Database.ProviderName}.{contextName}.sql"));
-                            sw.Write(sql);
-                            Console.WriteLine($"{contextName} 初始化开始");
-                            Console.WriteLine($"ConnectionString:{context.Database.GetConnectionString()}");
-                            // 查询当前DbContext是否已经初始化
-                            var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-                            var connection = context.Database.GetDbConnection();
-                            var command = connection.CreateCommand();
-                            command.Transaction = transaction.GetDbTransaction();
-                            command.CommandText = $"SELECT Hash FROM EFDbContext where Id='{contextName}'";
-                            var hash = command.ExecuteScalar();
-                            if (hash == null)
-                            {
-                                if (context.Database.ProviderName!.Contains("SqlServer"))
-                                {
-                                    var pattern = @"(?<=;\s+)GO(?=\s\s+)";
-                                    var sqls = Regex.Split(sql, pattern).Where(o => !string.IsNullOrWhiteSpace(o)).ToList();
-                                    foreach (var item in sqls)
-                                    {
-                                        command.CommandText = Regex.Replace(sql, pattern, string.Empty);
-                                        command.ExecuteNonQuery();
-                                    }
-                                }
-                                else
-                                {
-                                    command.CommandText = sql;
-                                    command.ExecuteNonQuery();
-                                }
-                                command.CommandText = $"INSERT INTO EFDbContext VALUES ('{contextName}', '{md5}','{now}');";
-                                command.ExecuteNonQuery();
-                                var dbSeedType = typeof(IDbSeed<>).MakeGenericType(dbContextType);
-                                serviceProvider.GetServices(dbSeedType).ForEach(o => dbSeedType.GetMethod("Seed")?.Invoke(o, new object[] { context }));
-                                Console.WriteLine($"{contextName} 初始化成功");
-                            }
-                            else
-                            {
-                                Console.WriteLine($"{contextName} 数据库结构{(hash.ToString() == md5 ? "正常" : "已过时")}");
-                            }
-                            context.SaveChanges();
-                            transaction.Commit();
-                        }
-                        catch (Exception ex)
-                        {
-                            transaction.Rollback();
-                            var message = $"{contextName} 初始化失败：{ex.Message}";
-                            Console.WriteLine(message);
-                            Console.WriteLine(ex.ToString());
-                            throw new Exception(message, ex);
-                        }
-                        finally
-                        {
-                            Console.WriteLine($"{contextName} 初始化结束");
-                        }
-                    }
-                });
-            }
-        });
+        app.Services.CreateDatabase();
     }
 }

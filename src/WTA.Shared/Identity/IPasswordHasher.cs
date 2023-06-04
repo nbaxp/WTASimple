@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Identity;
+namespace WTA.Shared.Identity;
 
 public interface IPasswordHasher
 {

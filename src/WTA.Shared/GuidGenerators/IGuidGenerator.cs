@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.GuidGenerators;
+namespace WTA.Shared.GuidGenerators;
 
 public interface IGuidGenerator
 {

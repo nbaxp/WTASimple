@@ -1,4 +1,3 @@
-using DocumentFormat.OpenXml.Wordprocessing;
 using System.ComponentModel.DataAnnotations;
 
 namespace WTA.Application.Identity.Entities;

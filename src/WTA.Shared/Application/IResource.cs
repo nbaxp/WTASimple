@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Application;
+namespace WTA.Shared.Application;
 
 public interface IResource
 {

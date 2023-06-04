@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.DependencyInjection;
+namespace WTA.Shared.DependencyInjection;
 
 [Flags]
 public enum PlatformType

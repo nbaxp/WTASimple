@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Job;
+namespace WTA.Shared.Job;
 
 public interface IJobService
 {

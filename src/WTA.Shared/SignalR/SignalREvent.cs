@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.SignalR;
+namespace WTA.Shared.SignalR;
 
 public class SignalREvent
 {

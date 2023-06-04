@@ -60,12 +60,12 @@ public class TokenController : BaseController
         {
             try
             {
-                var additionalClaims = new List<Claim> { new Claim(nameof(model.TenantId), model.TenantId!) };
+                var additionalClaims = new List<Claim>();
                 if (model.TenantId != null)
                 {
-                    var tenantQuery = this._tenantRepository.AsNoTracking();
-                    var tenantItem = tenantQuery.FirstOrDefault(o => o.TenantId == model.TenantId) ?? throw new Exception("租户不存在");
-                    additionalClaims.Add(new Claim(nameof(model.TenantId), model.TenantId?.ToString()!));
+                    //var tenantQuery = this._tenantRepository.AsNoTracking();
+                    //var tenantItem = tenantQuery.FirstOrDefault(o => o.TenantId == model.Tenant) ?? throw new Exception("租户不存在");
+                    additionalClaims.Add(new Claim(nameof(model.TenantId), model.TenantId!));
                 }
                 //
                 var userQuery = this._userRepository.Queryable();

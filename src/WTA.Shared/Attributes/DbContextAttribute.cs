@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Attributes;
+namespace WTA.Shared.Attributes;
 
 public class DbContextAttribute<T> : GenericAttribute<T>
 {

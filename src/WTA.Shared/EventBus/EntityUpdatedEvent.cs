@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.EventBus;
+namespace WTA.Shared.EventBus;
 
 public class EntityUpdatedEvent<T> : BaseEvent<T>
 {

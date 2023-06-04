@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Attributes;
+namespace WTA.Shared.Attributes;
 
 [AttributeUsage(AttributeTargets.Field)]
 public class ExpressionAttribute : Attribute

@@ -1,4 +1,4 @@
-﻿using WTA.Shared.Domain;
+using WTA.Shared.Domain;
 
 namespace WTA.Shared.Data;
 

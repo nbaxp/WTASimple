@@ -1,4 +1,4 @@
-﻿namespace WTA.Shared.Mappers;
+namespace WTA.Shared.Mappers;
 
 public interface IObjectMapper
 {

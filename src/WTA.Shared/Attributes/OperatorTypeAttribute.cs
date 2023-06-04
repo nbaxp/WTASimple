@@ -1,4 +1,4 @@
-﻿using WTA.Shared.Data;
+using WTA.Shared.Data;
 
 namespace WTA.Shared.Attributes;
 
