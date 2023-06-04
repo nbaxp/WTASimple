@@ -11,6 +11,7 @@ public abstract class BaseEntity : IResource
     }
 
     public Guid Id { get; set; }
+    public bool IsDeleted { get; set; }
     public bool IsDisabled { get; set; }
     public bool IsReadonly { get; set; }
     public int? Order { get; set; }

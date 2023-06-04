@@ -12,6 +12,7 @@
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageVersion Include="ClosedXML" Version="0.101.0" />
     <PackageVersion Include="Coravel" Version="4.2.1" />
+    <PackageVersion Include="ExpressionTranslator" Version="2.5.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="7.0.5" />
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="4.6.0" />

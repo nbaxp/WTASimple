@@ -1,8 +1,11 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using ExpressionDebugger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WTA.Shared.Attributes;
@@ -17,7 +20,9 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
     public static readonly ILoggerFactory DefaultLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
     private readonly string _tablePrefix;
-    public string? _tenantId { get; private set; }
+    public string? _tenantId;
+    public bool DisableTenantFilter { get; set; }
+    public bool DisableSoftDeleteFilter { get; set; }
 
     public BaseDbContext(DbContextOptions<T> options) : base(options)
     {
@@ -45,16 +50,13 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
             if (entityType.IsAssignableTo(typeof(BaseEntity)))
             {
                 //租户过滤
-                var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.TenantId));
-                var parameter = Expression.Parameter(entityType, "p");
-                var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
-                Expression<Func<string>> tenantExpression = () => this._tenantId!;
-                var right = tenantExpression.Body;
-                var filter = Expression.Lambda(Expression.Equal(left, right), parameter);
-                entityTypeBuilder.HasQueryFilter(filter);
+                entityTypeBuilder.HasQueryFilter(CreateTenantFilter(entityType, entityTypeBuilder));
+                //软删除
+                entityTypeBuilder.HasQueryFilter(CreateSoftDeleteFilter(entityType, entityTypeBuilder));
                 //主键
                 entityTypeBuilder.HasKey(nameof(BaseEntity.Id));
                 entityTypeBuilder.Property(nameof(BaseEntity.Id)).ValueGeneratedNever();
+
                 //行版本号
                 entityTypeBuilder.Property(nameof(BaseEntity.ConcurrencyStamp)).ValueGeneratedNever();
                 //扩展属性
@@ -122,6 +124,36 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                 }
             });
         }
+    }
+
+    private LambdaExpression CreateTenantFilter(Type entityType, EntityTypeBuilder entityTypeBuilder)
+    {
+        var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.TenantId));
+        var parameter = Expression.Parameter(entityType, "p");
+        var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
+        Expression<Func<string>> expression = () => this._tenantId!;
+        var right = expression.Body;
+        var filter = Expression.Lambda(Expression.OrElse(
+            Expression.Equal(() => this.DisableTenantFilter, () => false),
+            Expression.Equal(left, right)),
+            parameter);
+        Debug.WriteLine(filter.ToScript());
+        return filter;
+    }
+
+    private LambdaExpression CreateSoftDeleteFilter(Type entityType, EntityTypeBuilder entityTypeBuilder)
+    {
+        var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.IsDeleted));
+        var parameter = Expression.Parameter(entityType, "p");
+        var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
+        Expression<Func<bool>> expression = () => false;
+        var right = expression.Body;
+        var filter = Expression.Lambda(Expression.OrElse(
+            Expression.Equal(() => this.DisableSoftDeleteFilter, () => false),
+            Expression.Equal(left, right)),
+            parameter);
+        Debug.WriteLine(filter.ToScript());
+        return filter;
     }
 
     public override int SaveChanges()

@@ -6,6 +6,7 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" />
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="Coravel" />
+    <PackageReference Include="ExpressionTranslator" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
