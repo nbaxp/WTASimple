@@ -89,6 +89,7 @@ a.logo {
   min-width: 100px;
   padding-right: 20px;
   text-align: center;
+  color: var(--el-menu-text-color);
 }
 
 /* markdown component */
