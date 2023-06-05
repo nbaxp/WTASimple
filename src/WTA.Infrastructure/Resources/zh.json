@@ -1,5 +1,7 @@
 {
   "Test": "测试",
+  "Application": "WTA开发框架",
+  "Copyright": "版权所有 © copyright ",
   "CompareAttribute": "{0}”和{1}不匹配。",
   "FileExtensionsAttribute": "{0}只接受一下扩展名的文件: {1}",
   "MaxLengthAttribute": "{0}的最大长度为 {1}。",
@@ -17,8 +19,6 @@
   "DataTypeAttribute_DateTime": "{0}不是有效的日期格式",
   "CustomValidationAttribute": "{0}验证失败",
   "ValidationAttribute": "{0}验证失败",
-  "SiteName": "WTA快速开发框架",
-  "Copyright": "版权所有 © copyright ",
   "Confirm": "确定",
   "Reset": "重置",
   "RowIndex": "行号",

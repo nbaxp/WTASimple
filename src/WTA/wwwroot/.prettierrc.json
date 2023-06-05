@@ -1,0 +1,21 @@
+{
+  "printWidth": 120,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "ssingleQuote": true,
+  "squoteProps": "as-needed",
+  "sjsxSingleQuote": false,
+  "strailingComma": "all",
+  "sbracketSpacing": true,
+  "sjsxBracketSameLine": false,
+  "sarrowParens": "always",
+  "srangeStart": 0,
+  "srangeEnd": "Infinity",
+  "srequirePragma": false,
+  "sinsertPragma": false,
+  "sproseWrap": "preserve",
+  "shtmlWhitespaceSensitivity": "css",
+  "svueIndentScriptAndStyle": false,
+  "endOfLine": "lf"
+}

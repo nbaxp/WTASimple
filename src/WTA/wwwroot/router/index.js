@@ -14,19 +14,22 @@ const routes = [
     path: '/',
     redirect: '/home',
     component: layout,
-    meta: {
-      title: 'home'
-    },
     children: [
       {
         path: 'home',
         component: home,
-      }
+        meta: {
+          title: '首页',
+        },
+      },
     ],
   },
   {
     path: '/login',
     component: login,
+    meta: {
+      title: '登录',
+    },
   },
 ];
 
@@ -56,7 +59,13 @@ router.beforeEach(async (to, from, next) => {
 });
 
 router.afterEach((to, from) => {
-  NProgress.done();
+  try {
+    if (to.meta.title) {
+      document.title = `${to.meta.title}`;
+    }
+  } finally {
+    NProgress.done();
+  }
 });
 
 export default router;
