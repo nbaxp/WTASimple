@@ -1,6 +1,6 @@
 import html from "html";
 import Icon from "../components/icon/index.js";
-import useAppStore from "../store/app.js";
+import {useAppStore} from "../store/index.js";
 
 export default {
   components: { Icon },

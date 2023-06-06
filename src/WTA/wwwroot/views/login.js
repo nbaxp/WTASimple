@@ -5,6 +5,7 @@ import { login } from "../api/user.js";
 import { get } from "../request/index.js";
 import LayoutLogo from "../layouts/logo.js";
 import LayoutFooter from "../layouts/footer.js";
+import { useAppStore } from "../store/index.js";
 
 export default {
   components: { AppForm, LayoutLogo, LayoutFooter },
@@ -21,22 +22,6 @@ export default {
   </el-container>`,
   async setup() {
     const schema = (await get("token/create")).data;
-    // const schema = {
-    //   title: '登录',
-    //   type: 'object',
-    //   properties: {
-    //     UserName: {
-    //       title: '用户名'
-    //     },
-    //     Password: {
-    //       title: '密码'
-    //     },
-    //     RememberMe: {
-    //       title: '记住我',
-    //       type: 'boolean'
-    //     }
-    //   }
-    // };
     const model = reactive({
       schema,
       data: schemaToModel(schema),
@@ -46,7 +31,6 @@ export default {
     const submit = async () => {
       const result = await login(model.action, model.data);
       if (result.errors) {
-        //Object.assign(model.errors, result.errors);
         model.errors = result.errors;
       }
     };

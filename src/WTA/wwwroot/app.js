@@ -1,7 +1,7 @@
-import html from 'html';
-import { ElConfigProvider } from 'element-plus';
-import zhCn from './lib/element-plus/locale/zh-cn.min.mjs';
-import { Suspense } from 'vue';
+import html from "html";
+import { ElConfigProvider } from "element-plus";
+import zhCn from "./lib/element-plus/locale/zh-cn.min.mjs";
+import { Suspense } from "vue";
 
 export default {
   components: { ElConfigProvider, Suspense },
