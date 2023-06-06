@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WTA.Application.Identity.Entities;
@@ -5,6 +6,7 @@ using WTA.Shared.Attributes;
 using WTA.Shared.Authentication;
 using WTA.Shared.Controllers;
 using WTA.Shared.Data;
+using WTA.Shared.Extensions;
 
 namespace WTA.Application.Identity.Controllers;
 
@@ -50,15 +52,22 @@ public class UserController : GenericController<User>, IAuthenticationService
     }
 
     [HttpPost]
-    public User Info()
+    [Display(Name = "用户信息")]
+    public User? Info()
     {
         var user = this.Repository
             .AsNoTracking()
+            .Include(o => o.Department)
             .Include(o => o.UserRoles)
             .ThenInclude(o => o.Role)
             .ThenInclude(o => o.RolePermissions)
             .ThenInclude(o => o.Permission)
             .FirstOrDefault(o => o.UserName == this.User.Identity!.Name);
+        if (user != null)
+        {
+            user.SecurityStamp = string.Empty;
+            user.PasswordHash = string.Empty;
+        }
         return user!;
     }
 }

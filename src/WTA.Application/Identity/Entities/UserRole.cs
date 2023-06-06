@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
 
+[Display(Name = "用户角色")]
 public class UserRole : BaseEntity
 {
     public Guid UserId { get; set; }

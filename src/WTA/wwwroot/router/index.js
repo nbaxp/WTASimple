@@ -1,42 +1,48 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import Layout from "../layouts/index.js";
-import Home from "../views/home.js";
-import Login from "../views/login.js";
-import Forbidden from "../views/403.js";
 import { useTitle } from "@vueuse/core";
 import NProgress from "../lib/nprogress/nprogress.vite-esm.js";
 import { isLogin, hasPermission } from "../api/user.js";
 import { useAppStore } from "../store/index.js";
+import { listToTree } from "../utils/index.js";
 
 NProgress.configure({ showSpinner: false });
 
 const routes = [
   {
+    name: "layout",
     path: "/",
     redirect: "/home",
-    component: Layout,
+    component: () => import("../layouts/index.js"),
     children: [
       {
         path: "home",
-        component: Home,
+        component: () => import("../views/home.js"),
         meta: {
           title: "首页",
+          icon: "home",
         },
       },
     ],
   },
   {
     path: "/login",
-    component: Login,
+    component: () => import("../views/login.js"),
     meta: {
       title: "登录",
     },
   },
   {
     path: "/403",
-    component: Forbidden,
+    component: () => import("../views/403.js"),
     meta: {
       title: "权限不足",
+    },
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    component: () => import("../views/404.js"),
+    meta: {
+      title: "无法找到",
     },
   },
 ];
@@ -48,7 +54,6 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   NProgress.start();
-  const appStore = useAppStore();
   try {
     if (to.path !== "/login") {
       if (!(await isLogin())) {
@@ -68,7 +73,7 @@ router.beforeEach(async (to, from, next) => {
   }
 });
 
-router.afterEach((to, from) => {
+router.afterEach((to) => {
   try {
     if (to.meta.title) {
       useTitle().value = `${to.meta.title}`;
@@ -78,9 +83,51 @@ router.afterEach((to, from) => {
   }
 });
 
+const reset = (list) => {
+  return list.map((o) => {
+    const item = {
+      path: o.path,
+      component: () => import(`../views/${o.component ? o.component : "list"}.js`),
+      meta: o.meta,
+    };
+    if (o.type === "Resource") {
+      if (o.children.length) {
+        item.meta.buttons = o.children.map((b) => {
+          return {
+            path: b.path,
+            meta: b.meta,
+          };
+        });
+      }
+    } else if (o.type !== "Operation" && o.children.length) {
+      item.children = reset(o.children);
+    }
+    return item;
+  });
+};
+
 const refreshRouter = () => {
-  const appStore = useAppStore();
-  console.log(appStore.user);
+  const permissions = useAppStore().user.permissions;
+  const tree = reset(
+    listToTree(permissions, (o) => {
+      o.meta = {
+        title: o.name,
+        icon: o.icon,
+        order: o.order,
+        permission: o.number,
+        isExternal: o.isExternal,
+      };
+    })
+  );
+  const route = {
+    name: "layout",
+    path: "/",
+    redirect: "/home",
+    component: () => import("../layouts/index.js"),
+    children: tree,
+  };
+  router.removeRoute("layout");
+  router.addRoute("/", route);
 };
 export default router;
 export { refreshRouter };

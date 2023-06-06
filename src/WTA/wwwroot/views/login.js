@@ -5,7 +5,6 @@ import { login } from "../api/user.js";
 import { get } from "../request/index.js";
 import LayoutLogo from "../layouts/logo.js";
 import LayoutFooter from "../layouts/footer.js";
-import { useAppStore } from "../store/index.js";
 
 export default {
   components: { AppForm, LayoutLogo, LayoutFooter },

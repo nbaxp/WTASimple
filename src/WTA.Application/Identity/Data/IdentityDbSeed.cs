@@ -89,9 +89,9 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
         {
             Type = PermissionType.Resource,
             Name = "首页",
-            Number = "",
-            Path = "/",
-            Redirect = "home",
+            Number = "home",
+            Path = "home",
+            Component = "home",
             Icon = "home",
             Order = -1,
         }.UpdatePath());

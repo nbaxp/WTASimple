@@ -64,20 +64,12 @@ const getUser = async () => {
   const result = await post("user/info");
   const user = result.data;
   user.roles = Enumerable.from(user.userRoles)
-    .select((o) => {
-      o.role.permissions = Enumerable.from(o.role.rolePermissions)
-        .select((o) => o.permission)
-        .toArray();
-      delete o.role["rolePermissions"];
-      return o.role;
-    })
+    .select((o) => o.role)
     .toArray();
   user.permissions = Enumerable.from(user.roles)
     .selectMany((o) => o.rolePermissions)
     .select((o) => o.permission)
-    .distinct((o) => o.id)
     .toArray();
-  delete user["userRoles"];
   return user;
 };
 

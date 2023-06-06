@@ -1,16 +1,16 @@
-import { onMounted, ref } from 'vue';
+import { onMounted, ref } from "vue";
 
-const template = ` <g v-html="svg" /> `;
+const template = `<component v-if="name.indexOf('ep-')===0" :is="name" /> <v-else g v-html="svg" /> `;
 
 export default {
   props: {
     name: {
-      default: 'file',
+      default: "file",
     },
   },
   template,
   setup(props) {
-    const svg = ref('');
+    const svg = ref("");
     onMounted(async () => {
       try {
         const response = await fetch(`./assets/icons/${props.name}.svg`);

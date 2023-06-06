@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
 
+[Display(Name = "角色权限")]
 public class RolePermission : BaseEntity
 {
     public Guid RoleId { get; set; }

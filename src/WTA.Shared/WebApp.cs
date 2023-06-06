@@ -304,6 +304,7 @@ public class WebApp
             o.JsonSerializerOptions.DictionaryKeyPolicy = defaultJsonOptions.DictionaryKeyPolicy;
             o.JsonSerializerOptions.ReferenceHandler = defaultJsonOptions.ReferenceHandler;
             o.JsonSerializerOptions.Encoder = defaultJsonOptions.Encoder;
+            o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             if (builder.Environment.IsDevelopment())
             {
                 o.JsonSerializerOptions.WriteIndented = true;
@@ -353,6 +354,7 @@ public class WebApp
             options.SerializerOptions.DictionaryKeyPolicy = defaultJsonOptions.DictionaryKeyPolicy;
             options.SerializerOptions.ReferenceHandler = defaultJsonOptions.ReferenceHandler;
             options.SerializerOptions.Encoder = defaultJsonOptions.Encoder;
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
         return defaultJsonOptions;
     }
