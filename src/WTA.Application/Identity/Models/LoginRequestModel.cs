@@ -7,10 +7,12 @@ public class LoginRequestModel
     [UIHint("select")]
     public string? TenantId { get; set; } = null!;
 
-    [RegularExpression(".{4,8}")]
+    [MaxLength(64)]
     public string UserName { get; set; } = null!;
 
+    [MaxLength(64)]
     [DataType(DataType.Password)]
     public string Password { get; set; } = null!;
+
     public bool RememberMe { get; set; }
 }

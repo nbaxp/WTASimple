@@ -19,7 +19,16 @@ export default {
           v-else-if="item.type==='integer'"
         />
         <el-switch v-model="model.data[key]" type="checked" v-else-if="item.type==='boolean'" />
-        <el-input :placeholder="item.title" v-model="model.data[key]" type="text" v-else />
+        <template v-else>
+          <el-input
+            :placeholder="item.title"
+            v-model="model.data[key]"
+            type="password"
+            show-password
+            v-if="item.format==='password'"
+          />
+          <el-input :placeholder="item.title" v-model="model.data[key]" type="text" v-else />
+        </template>
       </el-form-item>
     </template>
     <el-form-item :label=" ">
