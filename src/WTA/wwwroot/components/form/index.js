@@ -1,8 +1,8 @@
-import html from 'html';
-import { ref, reactive, watch } from 'vue';
+import html from "html";
+import { ref, reactive, watch } from "vue";
 
 export default {
-  name: 'AppForm',
+  name: "AppForm",
   template: html`<el-form ref="formRef" :model="model.data">
     <template v-for="(item,key) in model.schema.properties">
       <el-form-item
@@ -22,23 +22,24 @@ export default {
         <el-input :placeholder="item.title" v-model="model.data[key]" type="text" v-else />
       </el-form-item>
     </template>
-    <el-form-item>
+    <el-form-item :label=" ">
+      <template #label></template>
       <el-button type="primary" @click="submit" :disabled="loading"><slot>确定</slot></el-button>
     </el-form-item>
   </el-form>`,
   props: {
     modelValue: { type: Object },
   },
-  emits: ['submit'],
+  emits: ["submit"],
   setup(props, context) {
     // init
     const model = reactive(props.modelValue);
     watch(
       model,
       (value) => {
-        context.emit('update:modelValue', value);
+        context.emit("update:modelValue", value);
       },
-      { deep: true },
+      { deep: true }
     );
     // ref
     const formRef = ref(null);
@@ -57,7 +58,7 @@ export default {
         return null;
       }
       const rules = [...(Array.isArray(property.rules) ? property.rules : [property.rules])].map((o) =>
-        JSON.parse(JSON.stringify(o)),
+        JSON.parse(JSON.stringify(o))
       );
       Object.values(rules).forEach((rule) => {
         rule.data = data;
@@ -72,7 +73,7 @@ export default {
             rule.message = format(schema.messages.required, property.title);
           } else if (rule.pattern) {
             rule.message = format(schema.messages.pattern, property.title);
-          } else if (property.type === 'string' || property.type === 'number' || property.type === 'array') {
+          } else if (property.type === "string" || property.type === "number" || property.type === "array") {
             if (rule.len) {
               rule.message = format(schema.messages[property.type].len, property.title, rule.len);
             } else if (rule.min) {
@@ -101,7 +102,7 @@ export default {
         //const valid = await validate();
         //if (valid) {
         loading.value = true;
-        context.emit('submit');
+        context.emit("submit");
         //}
       } catch (error) {
         console.error(error);

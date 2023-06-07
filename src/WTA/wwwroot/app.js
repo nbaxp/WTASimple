@@ -2,13 +2,14 @@ import html from "html";
 import { ElConfigProvider } from "element-plus";
 import zh from "./lib/element-plus/locale/zh-cn.min.mjs";
 import en from "./lib/element-plus/locale/en.min.mjs";
-import { Suspense } from "vue";
-import { reactive } from "vue";
+import { Suspense, reactive } from "vue";
 
 export default {
   components: { ElConfigProvider, Suspense },
   template: html`<suspense>
-    <el-config-provider :locale="localeMap.get($i18n.locale)"><router-view></router-view> </el-config-provider>
+    <el-config-provider :locale="localeMap.get($i18n.locale)" :button="buttonConfig">
+      <router-view></router-view>
+    </el-config-provider>
     <template #fallback> Loading... </template>
   </suspense>`,
   setup() {
@@ -18,8 +19,12 @@ export default {
         ["en", en],
       ])
     );
+    const buttonConfig = reactive({
+      autoInsertSpace: true,
+    });
     return {
       localeMap,
+      buttonConfig,
     };
   },
 };

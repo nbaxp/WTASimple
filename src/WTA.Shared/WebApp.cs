@@ -365,8 +365,8 @@ public class WebApp
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            //options.DocumentFilter<SwaggerFilter>();
-            //options.OperationFilter<SwaggerFilter>();
+            options.SchemaFilter<CustomSwaggerFilter>();
+            options.OperationFilter<CustomSwaggerFilter>();
             options.DocInclusionPredicate((docName, api) =>
             {
                 if (docName == "Default" && api.GroupName == null)
@@ -401,7 +401,6 @@ public class WebApp
         app.UseStaticFiles();
         app.UseRouting();
         UseLocalization(app);
-        app.UseRouting();
         UseAuthorization(app);
         app.MapDefaultControllerRoute();
         app.MapHub<PageHub>("/api/hub");
@@ -461,9 +460,9 @@ public class WebApp
         {
             var supportedCultures = new List<CultureInfo>
             {
-                new CultureInfo("zh"),new CultureInfo("en")
+                new CultureInfo("zh"),
+                new CultureInfo("en")
             };
-
             options.DefaultRequestCulture = new RequestCulture(supportedCultures.First());
             options.SupportedCultures = supportedCultures;
             options.SupportedUICultures = supportedCultures;

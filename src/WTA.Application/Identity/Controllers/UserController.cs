@@ -12,7 +12,7 @@ namespace WTA.Application.Identity.Controllers;
 
 [Implement<IAuthenticationService>]
 [ApiExplorerSettings(GroupName = nameof(IdentityModule))]
-[Route("api/[controller]/[action]")]
+[Route("api/{culture=zh}/[controller]/[action]")]
 public class UserController : GenericController<User>, IAuthenticationService
 {
     public UserController(IRepository<User> repository) : base(repository)

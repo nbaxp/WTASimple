@@ -14,11 +14,19 @@ const addToken = async (options) => {
   }
 };
 
-const getUrl = (url) => {
+const getUrl = (url, withoutCulture = false) => {
   if (url.indexOf("/") === 0) {
     return url;
   }
-  return `${requestSettings.baseURL}/${url}`;
+  let result = requestSettings.baseURL;
+  if (withoutCulture) {
+    result += `/${url}`;
+  } else {
+    const appStore = useAppStore();
+    result += withoutCulture ? "/" : `/${appStore.localization.locale}/`;
+    result += url;
+  }
+  return result;
 };
 
 const getResult = async (response) => {
@@ -43,8 +51,8 @@ const getResult = async (response) => {
   return result;
 };
 
-const get = async (url, data, options, withoutToken = false) => {
-  url = getUrl(url);
+const get = async (url, data, options, withoutToken = false, withoutCulture = false) => {
+  url = getUrl(url, withoutCulture);
   if (data) {
     url = `${url}?${qs.stringify(data)}`;
   }
@@ -61,8 +69,8 @@ const get = async (url, data, options, withoutToken = false) => {
   return getResult(response);
 };
 
-const post = async (url, data, options, withoutToken = false) => {
-  url = getUrl(url);
+const post = async (url, data, options, withoutToken = false, withoutCulture = false) => {
+  url = getUrl(url, withoutCulture);
   const defaultOptions = {
     method: "POST",
     headers: {
@@ -86,4 +94,4 @@ const post = async (url, data, options, withoutToken = false) => {
   return getResult(response);
 };
 
-export { requestSettings, get, post };
+export { requestSettings, getUrl, get, post };

@@ -10,14 +10,14 @@ const useAppStore = defineStore("app", {
       settings: { ...settings },
       isMenuCollapse: false,
     };
-    var localSettings = JSON.parse(localStorage.getItem("settings") ?? "{}");
+    const localSettings = JSON.parse(localStorage.getItem("settings") ?? "{}");
     Object.assign(state.settings, localSettings);
     return state;
   },
   actions: {
     async init() {
       // 获取站点信息
-      const result = await get("localization", null, null, true);
+      const result = await get("localization", null, null, true, true);
       this.localization = result.data;
       // 获取用户信息
       if (await isLogin()) {

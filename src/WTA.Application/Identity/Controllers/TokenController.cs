@@ -16,7 +16,7 @@ using WTA.Shared.Identity;
 
 namespace WTA.Application.Identity.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/{culture=zh}/[controller]")]
 [ApiExplorerSettings(GroupName = nameof(IdentityModule))]
 public class TokenController : BaseController
 {

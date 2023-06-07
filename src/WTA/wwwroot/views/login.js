@@ -4,16 +4,20 @@ import AppForm from "../components/form/index.js";
 import { login } from "../api/user.js";
 import { get } from "../request/index.js";
 import LayoutLogo from "../layouts/logo.js";
+import LayoutLocale from "../layouts/locale.js";
 import LayoutFooter from "../layouts/footer.js";
 
 export default {
-  components: { AppForm, LayoutLogo, LayoutFooter },
+  components: { AppForm, LayoutLogo, LayoutLocale, LayoutFooter },
   template: html`<el-container>
     <el-main style="display:flex;align-items: center;justify-content: center;">
       <div>
-        <layout-logo />
+        <div class="flex">
+          <layout-logo />
+          <layout-locale />
+        </div>
         <el-card class="box-card" style="width:400px;">
-          <app-form v-model="model" label-width="80px" @submit="submit">登录</app-form>
+          <app-form v-model="model" label-width="auto" @submit="submit">{{$t('login')}}</app-form>
         </el-card>
         <layout-footer />
       </div>

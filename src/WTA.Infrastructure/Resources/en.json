@@ -1,4 +1,15 @@
 {
   "Application": "WTA Framework",
-  "Copyright": "all rights reserved © copyright "
+  "Copyright": "all rights reserved © copyright",
+  "Login": "Login",
+  "Logout": "Logout",
+  "ConfirmLogout": "Confirm Logout?",
+  "Register": "Register",
+  "Tip": "Tip",
+  "Cancel": "Cancel",
+  "UserName": "User Name",
+  "Password": "Password",
+  "RememberMe": "Remember Me",
+  "ResetPassword": "Reset Password",
+  "UserCenter": "User Center"
 }

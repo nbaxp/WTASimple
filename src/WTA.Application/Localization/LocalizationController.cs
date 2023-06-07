@@ -34,7 +34,6 @@ public class LocalizationController : BaseController
                 .Select(o => new { Value = o.Name, Label = o.NativeName })
                 .ToList(),
             Locale = Thread.CurrentThread.CurrentCulture.Name,
-            FallbackLocale = this._options.DefaultRequestCulture.Culture.Name,
             Messages = new Dictionary<string, object>(),
         };
         foreach (var item in this._options.SupportedUICultures!)

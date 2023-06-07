@@ -39,7 +39,7 @@
   <script src="./lib/pubsub-js/pubsub.min.js"></script>
   <script src="./lib/@microsoft/signalr/signalr.min.js"></script>
   <script>
-    var connectionId = null;
+    let connectionId = null;
     const connection = new signalR.HubConnectionBuilder().withUrl('./api/hub').build();
     const connect = () => {
       if (connection.state === signalR.HubConnectionState.Disconnected) {

@@ -24,7 +24,7 @@ public class GenericControllerRouteConvention : IControllerModelConvention
             {
                 routeTemplate += $"{groupTypeName?.ToSlugify()}/";
             }
-            routeTemplate += "api/[controller]/[action]";
+            routeTemplate += "api/{culture=zh}/[controller]/[action]";
             controller.Selectors.Add(new SelectorModel
             {
                 AttributeRouteModel = new AttributeRouteModel(new RouteAttribute(routeTemplate)),

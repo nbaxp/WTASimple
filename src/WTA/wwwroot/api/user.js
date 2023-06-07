@@ -1,5 +1,5 @@
 import router from "../router/index.js";
-import { post } from "../request/index.js";
+import { getUrl, post } from "../request/index.js";
 import jwt_decode from "../lib/jwt-decode/jwt-decode.esm.js";
 import qs from "../lib/qs/shim.js";
 import { useAppStore } from "../store/index.js";
@@ -10,7 +10,7 @@ const isLogin = async () => {
   const appStore = useAppStore();
   // 有 token，判断是否过期，失败设置 token 为 null
   if (appStore.token) {
-    var exp = new Date(jwt_decode(appStore.token).exp * 1000);
+    const exp = new Date(jwt_decode(appStore.token).exp * 1000);
     if (exp > new Date()) {
       return true;
     } else {
@@ -20,7 +20,8 @@ const isLogin = async () => {
   // 有 refresh token，获取 token，失败删除 refresh token
   const refreshToken = getRefreshToken();
   if (refreshToken) {
-    const refreshRespoonse = await fetch("/api/token/refresh", {
+    const url = getUrl("token/refresh");
+    const refreshRespoonse = await fetch(url, {
       method: "POST",
       body: qs.stringify({ refreshToken }),
       headers: {
@@ -48,7 +49,7 @@ const login = async (action, data) => {
     setRefreshToken(result.data.refresh_token);
     appStore.user = await getUser();
     refreshRouter();
-    var redirect = router.currentRoute.value.query?.redirect ?? "/";
+    const redirect = router.currentRoute.value.query?.redirect ?? "/";
     router.push(redirect);
   }
   return result;
