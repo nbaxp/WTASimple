@@ -1,7 +1,4 @@
 {
-  "Test": "测试",
-  "Application": "WTA开发框架",
-  "Copyright": "版权所有 © copyright ",
   "CompareAttribute": "{0}”和{1}不匹配。",
   "FileExtensionsAttribute": "{0}只接受一下扩展名的文件: {1}",
   "MaxLengthAttribute": "{0}的最大长度为 {1}。",
@@ -36,8 +33,8 @@
   "OSArchitecture": "系统架构",
   "OSDescription": "操作系统",
   "ProcessArchitecture": "进程架构",
-  "Identity": "认证中心",
-  "SystemManagement": "系统管理",
+  "Tip": "提示",
+  "Cancel": "操作取消",
   "Index": "查询",
   "Details": "详情",
   "Create": "新建",
@@ -50,6 +47,7 @@
   "LoginModel": "登录",
   "Login": "登录",
   "Logout": "注销",
+  "ConfirmLogout": "确认退出？",
   "Register": "注册",
   "UserName": "用户名",
   "Password": "密码",
@@ -59,5 +57,9 @@
   "ResetPassword": "重置密码",
   "UserCenter": "用户中心",
   "Avatar": "头像",
-  "TenantId": "租户"
+  "TenantId": "租户",
+  "Application": "WTA开发框架",
+  "Copyright": "版权所有 © copyright ",
+  "Identity": "认证中心",
+  "SystemManagement": "系统管理"
 }

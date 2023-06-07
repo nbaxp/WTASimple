@@ -5,7 +5,7 @@ export default {
   template: html`<router-link to="/" class="logo">
     <div class="flex">
       <img src="/assets/logo.svg" />
-      <h1 v-if="!appStore.isMenuCollapse">{{ appStore.localization.resources.application }}</h1>
+      <h1 v-if="!appStore.isMenuCollapse">{{$t('application')}}</h1>
     </div>
   </router-link>`,
   setup() {

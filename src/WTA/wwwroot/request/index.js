@@ -9,7 +9,8 @@ const requestSettings = {
 const addToken = async (options) => {
   if (await isLogin()) {
     const appStore = useAppStore();
-    Object.assign(options, { headers: { Authorization: `Bearer ${appStore.token}` } });
+    options.headers ??= {};
+    options.headers.Authorization = `Bearer ${appStore.token}`;
   }
 };
 

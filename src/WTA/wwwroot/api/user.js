@@ -42,11 +42,11 @@ const isLogin = async () => {
 
 const login = async (action, data) => {
   const appStore = useAppStore();
-  const result = await post(action, data);
+  const result = await post(action, data, null, true);
   if (!result.errors) {
     appStore.token = result.data.access_token;
     setRefreshToken(result.data.refresh_token);
-    appStore.user = (await getUser()).data;
+    appStore.user = await getUser();
     refreshRouter();
     var redirect = router.currentRoute.value.query?.redirect ?? "/";
     router.push(redirect);
@@ -57,6 +57,7 @@ const login = async (action, data) => {
 const logout = () => {
   const appStore = useAppStore();
   appStore.token = null;
+  removeRefreshToken();
   router.push({ path: "/login", query: { redirect: router.currentRoute.value.fullPath } });
 };
 

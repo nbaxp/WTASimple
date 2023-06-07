@@ -26,20 +26,22 @@ public class LocalizationController : BaseController
     {
         if (culture != null)
         {
-            var cultureInfo = this._options.SupportedCultures!.First(o => o.Name == culture);
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
+            Thread.CurrentThread.CurrentCulture = this._options.SupportedCultures!.First(o => o.Name == culture);
         }
-        return Json(new
+        var result = new
         {
-            Culture = new
-            {
-                Current = Thread.CurrentThread.CurrentCulture.Name,
-                Options = this._options.SupportedUICultures?
+            Options = this._options.SupportedUICultures?
                 .Select(o => new { Value = o.Name, Label = o.NativeName })
                 .ToList(),
-            },
-            Resources = this._localizer.GetAllStrings().ToDictionary(o => o.Name, o => o.Value)
-        });
+            Locale = Thread.CurrentThread.CurrentCulture.Name,
+            FallbackLocale = this._options.DefaultRequestCulture.Culture.Name,
+            Messages = new Dictionary<string, object>(),
+        };
+        foreach (var item in this._options.SupportedUICultures!)
+        {
+            Thread.CurrentThread.CurrentCulture = item;
+            result.Messages.Add(item.Name, this._localizer.GetAllStrings().ToDictionary(o => o.Name, o => o.Value));
+        }
+        return Json(result);
     }
 }

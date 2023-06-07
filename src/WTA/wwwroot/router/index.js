@@ -107,7 +107,8 @@ const reset = (list) => {
 };
 
 const refreshRouter = () => {
-  const permissions = useAppStore().user.permissions;
+  const appStore = useAppStore();
+  const permissions = appStore.user.permissions;
   const tree = reset(
     listToTree(permissions, (o) => {
       o.meta = {
