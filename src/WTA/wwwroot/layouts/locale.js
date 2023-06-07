@@ -4,7 +4,7 @@ import { useI18n } from "vue-i18n";
 import Icon from "../components/icon/index.js";
 export default {
   components: { Icon },
-  template: html`<el-dropdown class="cursor-pointer">
+  template: html`<el-dropdown class="cursor-pointer" v-if="appStore.settings.enableLocale">
     <span class="el-dropdown-link flex">
       <el-icon :size="18">
         <icon name="lang" />
