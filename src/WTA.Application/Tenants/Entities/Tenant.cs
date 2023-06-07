@@ -8,5 +8,6 @@ public class Tenant : BaseEntity
 {
     public string Name { get; set; } = null!;
     public string Number { get; set; } = null!;
+    public bool DataBaseCreated { get; set; }
     public List<ConnectionString> ConnectionStrings { get; set; } = new List<ConnectionString>();
 }

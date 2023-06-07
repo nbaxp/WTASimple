@@ -5,6 +5,7 @@ using WTA.Shared.Data;
 namespace WTA.Application.Tenants.Entities;
 
 [Module<TenantModule>]
+[IgnoreMultiTenancy]
 public class TenantDbContext : BaseDbContext<TenantDbContext>
 {
     public TenantDbContext(DbContextOptions<TenantDbContext> options) : base(options)

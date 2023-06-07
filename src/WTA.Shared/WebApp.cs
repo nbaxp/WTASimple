@@ -50,6 +50,7 @@ using WTA.Shared.Options;
 using WTA.Shared.Resources;
 using WTA.Shared.SignalR;
 using WTA.Shared.Swagger;
+using WTA.Shared.Tenants;
 
 namespace WTA.Shared;
 
@@ -609,8 +610,24 @@ public class WebApp
             {
                 Action<DbContextOptionsBuilder> action = optionsBuilder =>
                 {
-                    var connectionStringKey = dbContextType.Name.TrimEnd("DbContext");
-                    var connectionString = builder.Configuration.GetConnectionString(connectionStringKey);
+                    var connectionStringName = dbContextType.Name.TrimEnd("DbContext");
+                    var connectionString = builder.Configuration.GetConnectionString(connectionStringName);
+                    if (!dbContextType.CustomAttributes.Any(o => o.AttributeType == typeof(IgnoreMultiTenancyAttribute)))
+                    {
+                        var tenantService = this.Services.GetService<ITenantService>();
+                        if (tenantService != null)
+                        {
+                            var tenantId = tenantService?.GetTenantId();
+                            if (tenantId != null)
+                            {
+                                connectionString = tenantService?.GetConnectionString(connectionStringName);
+                                if (string.IsNullOrEmpty(connectionString))
+                                {
+                                    throw new Exception("租户不存在");
+                                }
+                            }
+                        }
+                    }
                     optionsBuilder.UseSqlite(connectionString);
                 };
                 method?.MakeGenericMethod(dbContextType).Invoke(null, new object[] { builder.Services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
