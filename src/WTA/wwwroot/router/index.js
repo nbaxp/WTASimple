@@ -83,13 +83,14 @@ router.afterEach((to) => {
   }
 });
 
-const reset = (list) => {
+const reset = (list, parentPath = null) => {
   return list.map((o) => {
     const item = {
       path: o.path,
       component: () => import(`../views/${o.component ? o.component : "list"}.js`),
       meta: o.meta,
     };
+    item.meta.path = `${parentPath === null ? "/" : parentPath + "/"}${item.path}`;
     if (o.type === "Resource") {
       if (o.children.length) {
         item.meta.buttons = o.children.map((b) => {
@@ -100,7 +101,7 @@ const reset = (list) => {
         });
       }
     } else if (o.type !== "Operation" && o.children.length) {
-      item.children = reset(o.children);
+      item.children = reset(o.children, item.meta.path);
     }
     return item;
   });

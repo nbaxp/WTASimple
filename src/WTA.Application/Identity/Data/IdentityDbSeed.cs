@@ -104,7 +104,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                 Type = PermissionType.Module,
                 Name = moduleType.GetDisplayName(),
                 Number = moduleType.Name,
-                Path = $"/{moduleType.Name.TrimEnd("Module").ToSlugify()}",
+                Path = $"{moduleType.Name.TrimEnd("Module").ToSlugify()}",
                 Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon,
                 Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order
             };

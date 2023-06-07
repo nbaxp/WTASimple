@@ -12,7 +12,7 @@ export default {
       <el-aside width="auto">
         <el-scrollbar><layout-menu /></el-scrollbar>
       </el-aside>
-      <el-container>
+      <el-container class="backtop">
         <el-scrollbar>
           <el-main>
             <router-view></router-view>
@@ -20,6 +20,7 @@ export default {
           <el-footer>
             <layout-footer />
           </el-footer>
+          <el-backtop target=".backtop > .el-scrollbar > .el-scrollbar__wrap" />
         </el-scrollbar>
       </el-container>
     </el-container>

@@ -4,7 +4,6 @@ using WTA.Shared.Domain;
 namespace WTA.Application.Identity.Entities;
 
 [Display(Name = "工作任务")]
-[UserCenter]
 public class JobItem : BaseEntity
 {
     public string Name { get; set; } = null!;

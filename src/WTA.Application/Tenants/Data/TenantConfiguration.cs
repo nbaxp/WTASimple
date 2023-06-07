@@ -5,7 +5,7 @@ using WTA.Shared.Attributes;
 
 namespace WTA.Shared.Data.Config;
 
-[DbContext<IdentityDbContext>]
+[DbContext<TenantDbContext>]
 public class TenantConfiguration : IEntityTypeConfiguration<Tenant>,
     IEntityTypeConfiguration<ConnectionString>
 {

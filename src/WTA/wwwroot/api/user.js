@@ -70,6 +70,7 @@ const getUser = async () => {
   user.permissions = Enumerable.from(user.roles)
     .selectMany((o) => o.rolePermissions)
     .select((o) => o.permission)
+    .orderBy((o) => o.order)
     .toArray();
   return user;
 };

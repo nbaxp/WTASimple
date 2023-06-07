@@ -4,7 +4,6 @@ using WTA.Shared.Domain;
 namespace WTA.Application.Identity.Entities;
 
 [Display(Name = "用户")]
-[UserCenter]
 public class User : BaseEntity
 {
     public string UserName { get; set; } = null!;
