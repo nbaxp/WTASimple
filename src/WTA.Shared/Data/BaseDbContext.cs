@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 using WTA.Shared.Extensions;
@@ -20,6 +21,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
     public static readonly ILoggerFactory DefaultLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
     private readonly string _tablePrefix;
+    private readonly TenantsOptions _tenantsOptions;
     public string? _tenantId;
     public bool DisableTenantFilter { get; set; }
     public bool DisableSoftDeleteFilter { get; set; }
@@ -27,6 +29,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
     public BaseDbContext(DbContextOptions<T> options) : base(options)
     {
         this._tablePrefix = this.GetTablePrefix();
+        this._tenantsOptions = this.GetService<IOptions<TenantsOptions>>().Value;
         this._tenantId = this.GetService<ITenantService>()?.GetTenantId();
     }
 
@@ -134,7 +137,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
         Expression<Func<string>> expression = () => this._tenantId!;
         var right = expression.Body;
         var filter = Expression.Lambda(Expression.OrElse(
-            Expression.Equal(() => this.DisableTenantFilter, () => false),
+            Expression.Equal(() => this._tenantsOptions.IsEnabled && !this._tenantsOptions.DatabasePerTenant && !this.DisableTenantFilter, () => true),
             Expression.Equal(left, right)),
             parameter);
         Debug.WriteLine(filter.ToScript());
@@ -149,7 +152,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
         Expression<Func<bool>> expression = () => false;
         var right = expression.Body;
         var filter = Expression.Lambda(Expression.OrElse(
-            Expression.Equal(() => this.DisableSoftDeleteFilter, () => false),
+            Expression.Equal(() => !this.DisableSoftDeleteFilter, () => true),
             Expression.Equal(left, right)),
             parameter);
         Debug.WriteLine(filter.ToScript());
