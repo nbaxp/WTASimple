@@ -20,6 +20,12 @@ public class GenericController<TEntity> : BaseController, IResourceService<TEnti
     public IRepository<TEntity> Repository { get; }
 
     [HttpGet]
+    public IActionResult Index()
+    {
+        return Json(typeof(PaginationModel<TEntity, TEntity>).GetMetadataForType());
+    }
+
+    [HttpPost]
     public IActionResult Index(PaginationModel<TEntity, TEntity> model)
     {
         var query = this.Repository.AsNoTracking();
@@ -36,7 +42,7 @@ public class GenericController<TEntity> : BaseController, IResourceService<TEnti
         return Json(model);
     }
 
-    [HttpGet]
+    [HttpPost]
     public IActionResult Details(Guid id)
     {
         var entity = this.Repository.AsNoTracking().FirstOrDefault(o => o.Id == id);

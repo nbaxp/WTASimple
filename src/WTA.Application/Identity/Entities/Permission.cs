@@ -10,6 +10,7 @@ public class Permission : BaseTreeEntity<Permission>
     public bool IsHidden { get; set; }
     public bool IsExternal { get; set; }
     public string? Path { get; set; }
+    public string? Method { get; set; }
     public string? Component { get; set; }
     public string? Redirect { get; set; }
     public string? Icon { get; set; }

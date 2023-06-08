@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using WTA.Application.Identity.Entities;
 using WTA.Shared;
 using WTA.Shared.Application;
@@ -35,8 +36,16 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                 Children = new List<Department>
                 {
                     new Department {
-                        Name="部门",
-                        Number="Location",
+                        Name="总经办",
+                        Number="Root",
+                        Children=new List<Department>
+                        {
+                            new Department
+                            {
+                                Name="部门",
+                                Number="Department"
+                            }
+                        }
                     }
                 }
             }.UpdatePath());
@@ -159,16 +168,22 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                 {
                     var operation = actionDescriptor?.ActionName!;
                     var methodInfo = actionDescriptor?.MethodInfo!;
-                    resourcePermission.Children.Add(new Permission
+                    var method = (methodInfo.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(HttpMethodAttribute)))
+                    as HttpMethodAttribute)?.HttpMethods?.FirstOrDefault() ?? "POST";
+                    if (method != "GET")
                     {
-                        IsReadonly = true,
-                        Type = PermissionType.Operation,
-                        Name = methodInfo.GetDisplayName(),
-                        Number = $"{methodInfo.ReflectedType!.FullName}.{operation}",
-                        Path = $"{operation.TrimEnd("Async").ToSlugify()}",
-                        Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon,
-                        Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order
-                    });
+                        resourcePermission.Children.Add(new Permission
+                        {
+                            IsReadonly = true,
+                            Type = PermissionType.Operation,
+                            Name = methodInfo.GetDisplayName(),
+                            Number = $"{methodInfo.ReflectedType!.FullName}.{operation}",
+                            Path = $"{operation.TrimEnd("Async").ToSlugify()}",
+                            Method = method,
+                            Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon,
+                            Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order
+                        });
+                    }
                 });
             });
             modulePermission.UpdatePath();

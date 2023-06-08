@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
@@ -6,11 +7,20 @@ namespace WTA.Application.Identity.Entities;
 [Display(Name = "用户")]
 public class User : BaseEntity
 {
+    [Label]
     public string UserName { get; set; } = null!;
+
+    [ScaffoldColumn(false)]
     public string NormalizedUserName { get; set; } = null!;
+
     public string Name { get; set; } = null!;
+
+    [ScaffoldColumn(false)]
     public string SecurityStamp { get; set; } = null!;
+
+    [ScaffoldColumn(false)]
     public string PasswordHash { get; set; } = null!;
+
     public bool IsSystem { get; set; }
     public int AccessFailedCount { get; set; }
     public bool LockoutEnabled { get; set; }

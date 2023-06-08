@@ -13,7 +13,7 @@ public class TenantService : ITenantService
     private readonly string? _tenant;
     private readonly IServiceProvider _serviceProvider;
 
-    public TenantService(IHttpContextAccessor httpContextAccessor,IServiceProvider serviceProvider)
+    public TenantService(IHttpContextAccessor httpContextAccessor, IServiceProvider serviceProvider)
     {
         this._tenant = httpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(o => o.Type == "TenantId")?.Value;
         this._serviceProvider = serviceProvider;

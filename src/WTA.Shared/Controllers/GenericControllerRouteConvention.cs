@@ -12,19 +12,20 @@ public class GenericControllerRouteConvention : IControllerModelConvention
 {
     public void Apply(ControllerModel controller)
     {
-        if (controller.ControllerType.IsGenericType && controller.ControllerType.GetGenericTypeDefinition() == typeof(GenericController<>))
+        var baseControllerType = controller.ControllerType.GetBaseClasses().Concat(new Type[] { controller.ControllerType }).FirstOrDefault(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(GenericController<>));
+        if (baseControllerType != null)
         {
-            var genericType = controller.ControllerType.GenericTypeArguments[0];
-            var moduleTypeName = genericType.Assembly.GetName().Name!.TrimStart(WebApp.Current.Prefix).TrimEnd("Application").Trim('.');
+            var genericType = baseControllerType.GenericTypeArguments[0];
+            var moduleTypeName = WebApp.Current.ModuleTypes.FirstOrDefault(o => o.Value.Values.Any(o => o.Contains(genericType))).Key.Name.TrimEnd("Module");
             var groupTypeName = (genericType.GetCustomAttributes().FirstOrDefault(a => a.GetType().IsAssignableTo(typeof(GroupAttribute))))?
                 .GetType().Name.TrimEnd("Attribute");
 
-            var routeTemplate = $"{moduleTypeName?.ToSlugify()}/";
+            var routeTemplate = $"api/{{culture=zh}}/{moduleTypeName?.ToSlugify()}/";
             if (groupTypeName != null)
             {
                 routeTemplate += $"{groupTypeName?.ToSlugify()}/";
             }
-            routeTemplate += "api/{culture=zh}/[controller]/[action]";
+            routeTemplate += "[controller]/[action]";
             controller.Selectors.Add(new SelectorModel
             {
                 AttributeRouteModel = new AttributeRouteModel(new RouteAttribute(routeTemplate)),

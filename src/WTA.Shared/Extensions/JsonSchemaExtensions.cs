@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using WTA.Shared.Application;
+using WTA.Shared.Attributes;
 
 public static class JsonSchemaExtensions
 {
@@ -33,15 +34,6 @@ public static class JsonSchemaExtensions
             title = genericType.GetDisplayName();
         }
         schema.Add("title", title);
-        var showForDisplay = meta.ShowForDisplay;
-        if (meta is DefaultModelMetadata defaultMeta)
-        {
-            var attribute = defaultMeta.Attributes.PropertyAttributes?.FirstOrDefault(o => o.GetType() == typeof(HiddenInputAttribute));
-            if (attribute != null)
-            {
-                showForDisplay = (attribute as HiddenInputAttribute)!.DisplayValue;
-            }
-        }
 
         // array
         if (meta.IsEnumerableType)
@@ -83,6 +75,18 @@ public static class JsonSchemaExtensions
                                 continue;
                             }
                         }
+                        else
+                        {
+                            if (propertyMetadata is DefaultModelMetadata defaultPropertyModelMetadata)
+                            {
+                                var label = defaultPropertyModelMetadata.Attributes.PropertyAttributes
+                                    ?.FirstOrDefault(o => o.GetType() == typeof(LabelAttribute));
+                                if (label != null)
+                                {
+                                    schema.Add(nameof(label), propertyMetadata.Name!);
+                                }
+                            }
+                        }
                         properties.Add(propertyMetadata.Name!, propertyMetadata.GetSchema(serviceProvider, meta));
                     }
                 }
@@ -97,7 +101,14 @@ public static class JsonSchemaExtensions
         schema.AddNotNull("description", meta.Description);
         schema.AddNotNull("format", meta.DataTypeName?.ToLowerCamelCase());
         schema.AddNotNull("control", meta.TemplateHint?.ToLowerCamelCase());
-        //schema.AddNotNull(nameof(meta.ShowForDisplay), showForDisplay);
+        if (!meta.ShowForDisplay)
+        {
+            schema.Add("isDisableDisplay", true);
+        }
+        if (!meta.ShowForEdit)
+        {
+            schema.Add("isDisableEdit", true);
+        }
         //schema.AddNotNull(nameof(meta.ShowForEdit), meta.ShowForEdit);
         //schema.AddNotNull(nameof(meta.IsReadOnly), meta.IsReadOnly);
 

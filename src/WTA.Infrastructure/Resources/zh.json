@@ -1,4 +1,6 @@
 {
+  "Application": "WTA开发框架",
+  "Copyright": "版权所有 © copyright ",
   "CompareAttribute": "{0}”和{1}不匹配",
   "FileExtensionsAttribute": "{0}只接受一下扩展名的文件: {1}",
   "MaxLengthAttribute": "{0}的最大长度为 {1}",
@@ -21,6 +23,14 @@
   "RowIndex": "行号",
   "Name": "名称",
   "Number": "编号",
+  "Order": "序号",
+  "IsDisabled": "禁用",
+  "Properties": "属性",
+  "ParentId": "上级",
+  "LockoutEnabled": "启用锁定",
+  "LockoutEnd": "锁定截止",
+  "AccessFailedCount": "登录失败次数",
+  "IsSystem": "系统内置",
   "IsReadonly": "只读",
   "CreatedAt": "创建于",
   "Createdby": "创建人",
@@ -58,8 +68,8 @@
   "UserCenter": "用户中心",
   "Avatar": "头像",
   "TenantId": "租户",
-  "Application": "WTA开发框架",
-  "Copyright": "版权所有 © copyright ",
   "Identity": "认证中心",
-  "SystemManagement": "系统管理"
+  "SystemManagement": "系统管理",
+  "UserRoles": "用户角色",
+  "RolePermissions": "角色权限"
 }

@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
@@ -17,6 +15,7 @@ public class CustomSwaggerFilter : ISchemaFilter, IOperationFilter
     {
         this._options = options.Value;
     }
+
     public void Apply(OpenApiSchema schema, SchemaFilterContext context)
     {
     }
@@ -30,7 +29,7 @@ public class CustomSwaggerFilter : ISchemaFilter, IOperationFilter
                 o.AllowEmptyValue = true;
                 o.Required = false;
                 o.Schema.Nullable = true;
-                o.Schema.Default = new OpenApiString("zh");
+                o.Schema.Default = new OpenApiString(this._options.DefaultRequestCulture.Culture.Name);
             }
         });
     }

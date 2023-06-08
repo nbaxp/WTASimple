@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using WTA.Shared.Domain;
 using WTA.Shared.GuidGenerators;
@@ -24,13 +23,19 @@ public static class BaseEntityExtensions
         return entity;
     }
 
-    public static T UpdatePath<T>(this BaseTreeEntity<T> entity, BaseTreeEntity<T>? parent = null) where T : class
+    public static T UpdatePath<T>(this BaseTreeEntity<T> entity, BaseTreeEntity<T>? parent = null) where T : BaseEntity
     {
         entity.Id = $"{entity.TenantId},{parent?.Number},{entity.Number}".ToGuid();
-        entity.InternalPath = $"/{WebEncoders.Base64UrlEncode(entity.Id.ToByteArray())}";
         if (parent != null)
         {
-            entity.InternalPath = $"{parent.InternalPath}{entity.InternalPath}";
+            if (parent.InternalPath == null)
+            {
+                entity.InternalPath = $"{parent.Id}";
+            }
+            else
+            {
+                entity.InternalPath = $"{parent.InternalPath},{parent.Id}";
+            }
         }
         if (entity.Children.Any())
         {

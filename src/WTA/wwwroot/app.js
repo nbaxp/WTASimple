@@ -7,7 +7,7 @@ import { Suspense, reactive } from "vue";
 export default {
   components: { ElConfigProvider, Suspense },
   template: html`<suspense>
-    <el-config-provider :locale="localeMap.get($i18n.locale)" :button="buttonConfig">
+    <el-config-provider :locale="localeMap.get($i18n.locale)">
       <router-view></router-view>
     </el-config-provider>
     <template #fallback> Loading... </template>
@@ -19,12 +19,8 @@ export default {
         ["en", en],
       ])
     );
-    const buttonConfig = reactive({
-      autoInsertSpace: true,
-    });
     return {
       localeMap,
-      buttonConfig,
     };
   },
 };

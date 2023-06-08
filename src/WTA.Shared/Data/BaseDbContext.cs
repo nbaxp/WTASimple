@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using ExpressionDebugger;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -18,6 +19,11 @@ namespace WTA.Shared.Data;
 
 public abstract class BaseDbContext<T> : DbContext where T : DbContext
 {
+    static BaseDbContext()
+    {
+        LinqToDBForEFTools.Initialize();
+    }
+
     public static readonly ILoggerFactory DefaultLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
     private readonly string _tablePrefix;
@@ -90,7 +96,6 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                         .OnDelete(DeleteBehavior.NoAction);
                     entityTypeBuilder.Property(nameof(BaseTreeEntity<BaseEntity>.Name)).IsRequired();
                     entityTypeBuilder.Property(nameof(BaseTreeEntity<BaseEntity>.Number)).IsRequired().HasMaxLength(64);
-                    entityTypeBuilder.Property(nameof(BaseTreeEntity<BaseEntity>.InternalPath)).IsRequired();
                     entityTypeBuilder.HasIndex(nameof(BaseTreeEntity<BaseEntity>.Number)).IsUnique();
                 }
             }

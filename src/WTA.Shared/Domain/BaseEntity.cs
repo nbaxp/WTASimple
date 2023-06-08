@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Application;
 using WTA.Shared.Extensions;
 
@@ -10,12 +11,21 @@ public abstract class BaseEntity : IResource
         this.Init();
     }
 
+    [ScaffoldColumn(false)]
     public Guid Id { get; set; }
+
+    [ScaffoldColumn(false)]
     public bool IsDeleted { get; set; }
+
     public bool IsDisabled { get; set; }
     public bool IsReadonly { get; set; }
     public int? Order { get; set; }
+
+    [ScaffoldColumn(false)]
     public string ConcurrencyStamp { get; set; } = null!;
+
+    [ScaffoldColumn(false)]
     public string? TenantId { get; set; }
+
     public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
 }
