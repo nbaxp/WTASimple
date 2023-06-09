@@ -19,6 +19,6 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>,
 
     public void Configure(EntityTypeBuilder<ConnectionString> builder)
     {
-        builder.HasOne(o => o.Tenant).WithMany(o => o.ConnectionStrings).HasForeignKey(o => o.ParentId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(o => o.Parent).WithMany(o => o.ConnectionStrings).HasForeignKey(o => o.ParentId).OnDelete(DeleteBehavior.Cascade);
     }
 }

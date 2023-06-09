@@ -177,12 +177,13 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                             IsReadonly = true,
                             Type = PermissionType.Operation,
                             Name = methodInfo.GetDisplayName(),
-                            Number = $"{methodInfo.ReflectedType!.FullName}.{operation}",
+                            Number = $"{actionDescriptor?.ControllerName}.{operation}",
                             Path = $"{operation.TrimEnd("Async").ToSlugify()}",
                             Method = method,
                             Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon,
-                            Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order
-                        });
+                            Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order,
+                            IsMultiple = methodInfo.GetCustomAttribute<MultipleAttribute>() != null
+                        }); ;
                     }
                 });
             });

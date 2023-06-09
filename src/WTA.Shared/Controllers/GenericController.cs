@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WTA.Shared.Application;
+using WTA.Shared.Attributes;
 using WTA.Shared.Data;
 using WTA.Shared.Domain;
 using WTA.Shared.Extensions;
@@ -25,7 +26,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(typeof(PaginationModel<TModel, TEntity>).GetMetadataForType());
     }
 
-    [HttpPost]
+    [HttpPost, Multiple, Order(-4)]
     public IActionResult Index(PaginationModel<TModel, TEntity> model)
     {
         var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
@@ -46,7 +47,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(model);
     }
 
-    [HttpPost]
+    [HttpPost, Order(-2)]
     public IActionResult Details(Guid id)
     {
         var entity = this.Repository.AsNoTracking().FirstOrDefault(o => o.Id == id);
@@ -54,7 +55,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(model);
     }
 
-    [HttpPost]
+    [HttpPost, Multiple, Order(-3)]
     public IActionResult Create(TEntity model)
     {
         if (this.ModelState.IsValid)
@@ -74,7 +75,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(model);
     }
 
-    [HttpPost]
+    [HttpPost, Order(-1)]
     public IActionResult Update(TEntity model)
     {
         if (this.ModelState.IsValid)
@@ -101,8 +102,36 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(model);
     }
 
-    [HttpPost]
+    [HttpPost, Multiple, Order]
     public IActionResult Delete(Guid[] guids)
+    {
+        try
+        {
+            this.Repository.Delete(guids);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return Problem(ex.Message);
+        }
+    }
+
+    [HttpPost, Multiple, Order(-2)]
+    public IActionResult Import(Guid[] guids)
+    {
+        try
+        {
+            this.Repository.Delete(guids);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return Problem(ex.Message);
+        }
+    }
+
+    [HttpPost, Multiple, Order(-1)]
+    public IActionResult Export(Guid[] guids)
     {
         try
         {

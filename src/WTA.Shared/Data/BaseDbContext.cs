@@ -20,24 +20,77 @@ namespace WTA.Shared.Data;
 
 public abstract class BaseDbContext<T> : DbContext where T : DbContext
 {
+    public static readonly ILoggerFactory DefaultLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+
+    public string? _tenantId;
+
+    private static readonly ValueComparer<Dictionary<string, string>> DictionaryValueComparer = new(
+        (v1, v2) => v1 != null && v2 != null && v1.SequenceEqual(v2), o => o.GetHashCode());
+
+    private readonly string _tablePrefix;
+
+    private readonly TenantsOptions _tenantsOptions;
+
     static BaseDbContext()
     {
         LinqToDBForEFTools.Initialize();
     }
-
-    public static readonly ILoggerFactory DefaultLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
-
-    private readonly string _tablePrefix;
-    private readonly TenantsOptions _tenantsOptions;
-    public string? _tenantId;
-    public bool DisableTenantFilter { get; set; }
-    public bool DisableSoftDeleteFilter { get; set; }
 
     public BaseDbContext(DbContextOptions<T> options) : base(options)
     {
         this._tablePrefix = this.GetTablePrefix();
         this._tenantsOptions = this.GetService<IOptions<TenantsOptions>>().Value;
         this._tenantId = this.GetService<ITenantService>()?.GetTenantId();
+    }
+
+    public bool DisableSoftDeleteFilter { get; set; }
+    public bool DisableTenantFilter { get; set; }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        var entries = GetEntries();
+        BeforeSave(entries);
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        var entries = GetEntries();
+        BeforeSave(entries);
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    protected virtual void BeforeSave(List<EntityEntry> entries)
+    {
+        var userName = this.GetService<IHttpContextAccessor>().HttpContext?.User.Identity?.Name;
+        var tenant = this.GetService<ITenantService>().GetTenantId();
+        var now = DateTime.UtcNow;
+        foreach (var item in entries.Where(o => o.State == EntityState.Added || o.State == EntityState.Modified || o.State == EntityState.Deleted))
+        {
+            // 设置审计属性和租户
+            if (item.Entity is BaseEntity entity)
+            {
+                if (item.State == EntityState.Added)
+                {
+                    entity.CreatedOn = now;
+                    entity.CreatedBy = userName;
+                    entity.TenantId = tenant;
+                }
+                else if (item.State == EntityState.Modified)
+                {
+                    entity.UpdatedOn = now;
+                    entity.UpdatedBy = userName;
+                }
+                //else if (item.State == EntityState.Deleted)
+                //{
+                //    item.State = EntityState.Modified;
+                //    entity.IsDeleted = true;
+                //    entity.DeletedOn = now;
+                //    entity.DeletedBy = userName;
+                //}
+                entity.ConcurrencyStamp = Guid.NewGuid().ToString();
+            }
+        }
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -152,21 +205,6 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
         }
     }
 
-    private LambdaExpression CreateTenantFilter(Type entityType, EntityTypeBuilder entityTypeBuilder)
-    {
-        var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.TenantId));
-        var parameter = Expression.Parameter(entityType, "p");
-        var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
-        Expression<Func<string>> expression = () => this._tenantId!;
-        var right = expression.Body;
-        var filter = Expression.Lambda(Expression.OrElse(
-            Expression.Equal(() => this._tenantsOptions.IsEnabled && !this._tenantsOptions.DatabasePerTenant && !this.DisableTenantFilter, () => true),
-            Expression.Equal(left, right)),
-            parameter);
-        Debug.WriteLine(filter.ToScript());
-        return filter;
-    }
-
     private LambdaExpression CreateSoftDeleteFilter(Type entityType, EntityTypeBuilder entityTypeBuilder)
     {
         var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.IsDeleted));
@@ -182,56 +220,27 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
         return filter;
     }
 
-    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    private LambdaExpression CreateTenantFilter(Type entityType, EntityTypeBuilder entityTypeBuilder)
     {
-        var entries = GetEntries();
-        BeforeSave(entries);
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+        var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.TenantId));
+        var parameter = Expression.Parameter(entityType, "p");
+        var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
+        Expression<Func<string>> expression = () => this._tenantId!;
+        var right = expression.Body;
+        var filter = Expression.Lambda(Expression.OrElse(
+            Expression.Equal(() => this._tenantsOptions.IsEnabled && !this._tenantsOptions.DatabasePerTenant && !this.DisableTenantFilter, () => true),
+            Expression.Equal(left, right)),
+            parameter);
+        Debug.WriteLine(filter.ToScript());
+        return filter;
     }
 
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
-    {
-        var entries = GetEntries();
-        BeforeSave(entries);
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-    }
-    protected virtual void BeforeSave(List<EntityEntry> entries)
-    {
-        var userName = this.GetService<IHttpContextAccessor>().HttpContext?.User.Identity?.Name;
-        var tenant = this.GetService<ITenantService>().GetTenantId();
-        var now = DateTime.UtcNow;
-        foreach (var item in entries.Where(o => o.State == EntityState.Added || o.State == EntityState.Modified || o.State == EntityState.Deleted))
-        {
-            // 设置审计属性和租户
-            if (item.Entity is BaseEntity entity)
-            {
-                if (item.State == EntityState.Added)
-                {
-                    entity.CreatedOn = now;
-                    entity.CreatedBy = userName;
-                    entity.TenantId = tenant;
-                }
-                else if (item.State == EntityState.Modified)
-                {
-                    entity.UpdatedOn = now;
-                    entity.UpdatedBy = userName;
-                }
-                if (item.State != EntityState.Deleted)
-                {
-                    entity.ConcurrencyStamp = Guid.NewGuid().ToString();
-                }
-            }
-        }
-    }
     private List<EntityEntry> GetEntries()
     {
         this.ChangeTracker.DetectChanges();
         var entries = this.ChangeTracker.Entries().ToList();
         return entries;
     }
-
-    private static readonly ValueComparer<Dictionary<string, string>> DictionaryValueComparer = new(
-        (v1, v2) => v1 != null && v2 != null && v1.SequenceEqual(v2),o => o.GetHashCode());
 
     private string GetTablePrefix()
     {

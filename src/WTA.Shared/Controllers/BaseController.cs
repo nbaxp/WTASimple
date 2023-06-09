@@ -17,7 +17,7 @@ public class BaseController : Controller
         var descriptor = (context.ActionDescriptor as ControllerActionDescriptor)!;
         if (!descriptor.MethodInfo.CustomAttributes.Any(o => o.AttributeType == typeof(AllowAnonymousAttribute)))
         {
-            var operaation = $"{this.GetType().FullName}.{descriptor.ActionName}";
+            var operaation = $"{descriptor.ControllerName}.{descriptor.ActionName}";
             if (!this.HttpContext.User.Identity!.IsAuthenticated)
             {
                 context.Result = this.Unauthorized("未登录");

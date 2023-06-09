@@ -1,6 +1,7 @@
 {
   "Application": "WTA开发框架",
   "Copyright": "版权所有 © copyright ",
+  "Test": "测试",
   "CompareAttribute": "{0}”和{1}不匹配",
   "FileExtensionsAttribute": "{0}只接受一下扩展名的文件: {1}",
   "MaxLengthAttribute": "{0}的最大长度为 {1}",
@@ -23,6 +24,7 @@
   "RowIndex": "行号",
   "Name": "名称",
   "Number": "编号",
+  "Value": "值",
   "Order": "序号",
   "IsDisabled": "禁用",
   "Properties": "属性",
@@ -56,6 +58,7 @@
   "Remove": "移除",
   "Restore": "还原",
   "Delete": "删除",
+  "Authenticate": "验证",
   "LoginModel": "登录",
   "Login": "登录",
   "Logout": "注销",
@@ -74,5 +77,12 @@
   "SystemManagement": "系统管理",
   "UserRoles": "用户角色",
   "RolePermissions": "角色权限",
-  "DepartmentId": "部门"
+  "DepartmentId": "部门",
+  "Cron": "定时器",
+  "Icon": "图标",
+  "Type": "类型",
+  "IsExternal": "外链",
+  "IsHidden": "隐藏",
+  "Redirect": "跳转",
+  "Columns": "列"
 }

@@ -3,8 +3,8 @@ import { ref, reactive, watch } from "vue";
 
 export default {
   name: "AppForm",
-  template: html`<el-form ref="formRef" :model="model.data">
-    <template v-for="(item,key) in model.schema.properties">
+  template: html`<el-form ref="formRef" :model="model?.data">
+    <template v-for="(item,key) in model?.schema?.properties">
       <el-form-item
         :label="item.title+'：'"
         :prop="getProp(key)"

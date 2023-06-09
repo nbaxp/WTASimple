@@ -4,7 +4,7 @@ using WTA.Shared.Extensions;
 
 namespace WTA.Shared.Domain;
 
-public abstract class BaseEntity : IResource
+public abstract class BaseEntity : IResource, ISoftDeleted
 {
     public BaseEntity()
     {
@@ -26,6 +26,7 @@ public abstract class BaseEntity : IResource
     public string? UpdatedBy { get; set; }
     public DateTime? DeletedOn { get; set; }
     public string? DeletedBy { get; set; }
+
     [ScaffoldColumn(false)]
     public string ConcurrencyStamp { get; set; } = null!;
 

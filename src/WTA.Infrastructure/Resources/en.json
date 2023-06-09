@@ -1,6 +1,7 @@
 {
   "Application": "WTA Framework",
   "Copyright": "all rights reserved © copyright",
+  "Test": "test",
   "Login": "Login",
   "Logout": "Logout",
   "ConfirmLogout": "Confirm Logout?",
