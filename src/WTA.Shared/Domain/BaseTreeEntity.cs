@@ -8,14 +8,13 @@ public abstract class BaseTreeEntity<T> : BaseEntity
 {
     public List<T> Children { get; set; } = new List<T>();
 
-    [Label]
     public string Name { get; set; } = null!;
 
     public string Number { get; set; } = null!;
 
     public T? Parent { get; set; }
 
-    [ScaffoldColumn(false)]
+    [Navigation]
     public Guid? ParentId { get; set; }
 
     [ScaffoldColumn(false)]

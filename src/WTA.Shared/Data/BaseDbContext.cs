@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using ExpressionDebugger;
 using LinqToDB.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -80,7 +81,24 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                     {
                         //列注释
                         entityTypeBuilder.Property(prop.Name).HasComment(prop.PropertyInfo?.GetDisplayName());
-                        if (prop.PropertyInfo!.PropertyType.IsEnum)
+                        if (prop.PropertyInfo!.PropertyType.GetUnderlyingType() == typeof(DateTime))
+                        {
+                            //EF 默认使用 DateTimeKind.Unspecified 读取，数据库应存储 UTC 格式，客户端根据所在时区进行展示
+                            if (prop.PropertyInfo!.PropertyType.IsNullableType())
+                            {
+                                // HasConversion(toDBValue,fromDBValue)
+                                entityTypeBuilder.Property<DateTime?>(prop.Name)
+                                .HasConversion(v => v.HasValue ? (v.Value.Kind == DateTimeKind.Utc ? v : v.Value.ToUniversalTime()) : null,
+                                v => v == null ? null : DateTime.SpecifyKind(v.Value, DateTimeKind.Utc));
+                            }
+                            else
+                            {
+                                // HasConversion(toDBValue,fromDBValue)
+                                entityTypeBuilder.Property<DateTime>(prop.Name)
+                                .HasConversion(v => v.Kind == DateTimeKind.Utc ? v : v.ToUniversalTime(), v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+                            }
+                        }
+                        if (prop.PropertyInfo!.PropertyType.GetUnderlyingType().IsEnum)
                         {
                             //枚举存为字符串
                             entityTypeBuilder.Property(prop.Name).HasConversion<string>();
@@ -164,18 +182,56 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
         return filter;
     }
 
-    public override int SaveChanges()
-    {
-        return base.SaveChanges();
-    }
-
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        var entries = GetEntries();
+        BeforeSave(entries);
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
-    private static readonly ValueComparer<Dictionary<string, string>> DictionaryValueComparer = new((v1, v2) => v1 != null && v2 != null && v1.SequenceEqual(v2),
-                o => o.GetHashCode());
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        var entries = GetEntries();
+        BeforeSave(entries);
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+    protected virtual void BeforeSave(List<EntityEntry> entries)
+    {
+        var userName = this.GetService<IHttpContextAccessor>().HttpContext?.User.Identity?.Name;
+        var tenant = this.GetService<ITenantService>().GetTenantId();
+        var now = DateTime.UtcNow;
+        foreach (var item in entries.Where(o => o.State == EntityState.Added || o.State == EntityState.Modified || o.State == EntityState.Deleted))
+        {
+            // 设置审计属性和租户
+            if (item.Entity is BaseEntity entity)
+            {
+                if (item.State == EntityState.Added)
+                {
+                    entity.CreatedOn = now;
+                    entity.CreatedBy = userName;
+                    entity.TenantId = tenant;
+                }
+                else if (item.State == EntityState.Modified)
+                {
+                    entity.UpdatedOn = now;
+                    entity.UpdatedBy = userName;
+                }
+                if (item.State != EntityState.Deleted)
+                {
+                    entity.ConcurrencyStamp = Guid.NewGuid().ToString();
+                }
+            }
+        }
+    }
+    private List<EntityEntry> GetEntries()
+    {
+        this.ChangeTracker.DetectChanges();
+        var entries = this.ChangeTracker.Entries().ToList();
+        return entries;
+    }
+
+    private static readonly ValueComparer<Dictionary<string, string>> DictionaryValueComparer = new(
+        (v1, v2) => v1 != null && v2 != null && v1.SequenceEqual(v2),o => o.GetHashCode());
 
     private string GetTablePrefix()
     {

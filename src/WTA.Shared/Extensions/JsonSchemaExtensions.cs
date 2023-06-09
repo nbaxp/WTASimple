@@ -77,15 +77,7 @@ public static class JsonSchemaExtensions
                         }
                         else
                         {
-                            if (propertyMetadata is DefaultModelMetadata defaultPropertyModelMetadata)
-                            {
-                                var label = defaultPropertyModelMetadata.Attributes.PropertyAttributes
-                                    ?.FirstOrDefault(o => o.GetType() == typeof(LabelAttribute));
-                                if (label != null)
-                                {
-                                    schema.Add(nameof(label), propertyMetadata.Name!);
-                                }
-                            }
+                            //property
                         }
                         properties.Add(propertyMetadata.Name!, propertyMetadata.GetSchema(serviceProvider, meta));
                     }
@@ -94,23 +86,31 @@ public static class JsonSchemaExtensions
             }
             else
             {
-                schema.Add("type", GetJsonType(modelType));
+                AddType(schema, modelType);
             }
         }
 
         schema.AddNotNull("description", meta.Description);
         schema.AddNotNull("format", meta.DataTypeName?.ToLowerCamelCase());
         schema.AddNotNull("control", meta.TemplateHint?.ToLowerCamelCase());
+        // Scaffold(false)
         if (!meta.ShowForDisplay)
         {
-            schema.Add("isDisableDisplay", true);
+            schema.Add("hidden", true);
         }
-        if (!meta.ShowForEdit)
+        if (meta is DefaultModelMetadata defaultModelMetadata)
         {
-            schema.Add("isDisableEdit", true);
+            var propertyName = defaultModelMetadata.Name;
+            if (propertyName != null)
+            {
+                if (defaultModelMetadata.Attributes.Attributes.FirstOrDefault(o => o.GetType() == typeof(NavigationAttribute)) is NavigationAttribute navigationAttribute)
+                {
+                    var path = navigationAttribute.Path ?? $"{propertyName.Substring(0, propertyName.Length - 2)}.Name";
+                    path = string.Join('.', path.Split('.').Select(o => o.ToLowerCamelCase()));
+                    schema.Add("navigation", path);
+                }
+            }
         }
-        //schema.AddNotNull(nameof(meta.ShowForEdit), meta.ShowForEdit);
-        //schema.AddNotNull(nameof(meta.IsReadOnly), meta.IsReadOnly);
 
         var roles = meta.GetRules(serviceProvider, title);
         if (roles.Any())
@@ -225,9 +225,13 @@ public static class JsonSchemaExtensions
                 else if (attribute is DataTypeAttribute dataType)
                 {
                     var name = dataType.GetDataTypeName();
-                    if (name == DataType.DateTime.ToString())
+                    if (name == DataType.Date.ToString())
                     {
-                        rule.Add("type", "date");
+                        rule.TryAdd("format", "date");
+                    }
+                    else if (name == DataType.DateTime.ToString())
+                    {
+                        rule.TryAdd("format", "datetime");
                     }
                 }
                 else
@@ -246,33 +250,30 @@ public static class JsonSchemaExtensions
         return rules;
     }
 
-    private static string GetJsonType(Type modelType)
+    private static void AddType(Dictionary<string, object> schema, Type modelType)
     {
+        var type = "string";
         if (modelType == typeof(bool))
         {
-            return "boolean";
+            type = "boolean";
         }
         else if (modelType == typeof(short) ||
             modelType == typeof(int) ||
             modelType == typeof(long))
         {
-            return "integer";
+            type = "integer";
         }
         else if (
             modelType == typeof(float) ||
             modelType == typeof(double) ||
             modelType == typeof(decimal))
         {
-            return "number";
+            type = "number";
         }
-        else if (modelType == typeof(string))
+        schema.Add("type", type);
+        if (modelType.GetUnderlyingType() == typeof(DateTime))
         {
-            return "string";
+            schema.TryAdd("format", "datetime");
         }
-        else if (modelType.IsClass && !modelType.IsNullableType())
-        {
-            return "object";
-        }
-        return modelType.Name.ToLowerCamelCase();
     }
 }

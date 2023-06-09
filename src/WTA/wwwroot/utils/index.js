@@ -1,4 +1,5 @@
-import Enumerable from "linq";
+import { get } from "lodash";
+
 // format html`...` by vscode lit-html
 function html(strings, ...values) {
   let output = "";
@@ -50,5 +51,9 @@ function listToTree(list, func) {
   return tree;
 }
 
+function getProp(instance, propPath) {
+  return get(instance, propPath);
+}
+
 export default html;
-export { schemaToModel, listToTree };
+export { schemaToModel, listToTree, getProp };

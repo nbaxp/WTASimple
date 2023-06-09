@@ -7,7 +7,6 @@ namespace WTA.Application.Identity.Entities;
 [Display(Name = "用户")]
 public class User : BaseEntity
 {
-    [Label]
     public string UserName { get; set; } = null!;
 
     [ScaffoldColumn(false)]

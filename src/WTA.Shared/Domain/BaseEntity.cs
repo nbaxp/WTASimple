@@ -20,7 +20,12 @@ public abstract class BaseEntity : IResource
     public bool IsDisabled { get; set; }
     public bool IsReadonly { get; set; }
     public int? Order { get; set; }
-
+    public DateTime CreatedOn { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime? UpdatedOn { get; set; }
+    public string? UpdatedBy { get; set; }
+    public DateTime? DeletedOn { get; set; }
+    public string? DeletedBy { get; set; }
     [ScaffoldColumn(false)]
     public string ConcurrencyStamp { get; set; } = null!;
 

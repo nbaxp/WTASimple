@@ -7,9 +7,10 @@ namespace WTA.Application.Tenants.Entities;
 [Display(Name = "连接字符串")]
 public class ConnectionString : BaseEntity
 {
-    [Label]
     public string Name { get; set; } = null!;
     public string Value { get; set; } = null!;
+
     public Guid? ParentId { get; set; }
+
     public Tenant? Tenant { get; set; }
 }

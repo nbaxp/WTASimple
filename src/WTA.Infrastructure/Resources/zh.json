@@ -32,10 +32,12 @@
   "AccessFailedCount": "登录失败次数",
   "IsSystem": "系统内置",
   "IsReadonly": "只读",
-  "CreatedAt": "创建于",
-  "Createdby": "创建人",
-  "ModifiedAt": "修改于",
-  "ModifiedBy": "修改人",
+  "CreatedOn": "创建时间",
+  "CreatedBy": "创建人",
+  "UpdatedOn": "修改时间",
+  "UpdatedBy": "修改人",
+  "DeletedOn": "删除时间",
+  "DeletedBy": "删除人",
   "Operations": "操作",
   "Disabled": "已禁用",
   "DisplayOrder": "序号",
@@ -71,5 +73,6 @@
   "Identity": "认证中心",
   "SystemManagement": "系统管理",
   "UserRoles": "用户角色",
-  "RolePermissions": "角色权限"
+  "RolePermissions": "角色权限",
+  "DepartmentId": "部门"
 }

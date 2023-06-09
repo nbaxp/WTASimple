@@ -1,6 +1,7 @@
-import html from "html";
+import html, { getProp } from "html";
 import AppForm from "../form/index.js";
 import { get, post } from "../../request/index.js";
+import { ref } from "vue";
 import { useRoute } from "vue-router";
 
 export default {
@@ -23,10 +24,17 @@ export default {
           <template #default="scope">{{ scope.row[key][subKey] }} </template>
         </el-table-column>
       </template>
+      <template v-else-if="item.navigation">
+        <el-table-column :prop="key" :label="item.title">
+          <template #default="scope">{{getProp(scope.row,item.navigation)}}</template>
+        </el-table-column>
+      </template>
       <template v-else>
-        <el-table-column :prop="key" :label="item.title" v-if="!item.isDisableDisplay">
+        <el-table-column :prop="key" :label="item.title" v-if="!item.hidden">
           <template #default="scope">
             <el-switch disabled v-model="scope.row[key]" type="checked" v-if="item.type==='boolean'" />
+            <el-date-picker disabled v-model="scope.row[key]" type="date" v-else-if="item.format==='date'" />
+            <el-date-picker disabled v-model="scope.row[key]" type="datetime" v-else-if="item.format==='datetime'" />
             <template v-else>{{ scope.row[key] }}</template>
           </template>
         </el-table-column>
@@ -34,7 +42,8 @@ export default {
     </template>
   </el-table>`,
   props: ["modelValue", "api"],
-  async setup(props) {
+  async setup() {
+    const tableRef = ref(null);
     const route = useRoute();
     const url = `${route.meta.path}/index`.substring(1);
     const schema = (await get(url)).data;
@@ -43,8 +52,10 @@ export default {
     return {
       route,
       schema,
+      tableRef,
       tableSchema,
       data,
+      getProp,
     };
   },
 };

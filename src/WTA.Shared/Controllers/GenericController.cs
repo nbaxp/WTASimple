@@ -9,7 +9,7 @@ using WTA.Shared.Mappers;
 namespace WTA.Shared.Controllers;
 
 [GenericControllerNameConvention]
-public class GenericController<TEntity> : BaseController, IResourceService<TEntity>
+public class GenericController<TEntity, TModel> : BaseController, IResourceService<TEntity>
     where TEntity : BaseEntity
 {
     public GenericController(IRepository<TEntity> repository)
@@ -22,23 +22,27 @@ public class GenericController<TEntity> : BaseController, IResourceService<TEnti
     [HttpGet]
     public IActionResult Index()
     {
-        return Json(typeof(PaginationModel<TEntity, TEntity>).GetMetadataForType());
+        return Json(typeof(PaginationModel<TModel, TEntity>).GetMetadataForType());
     }
 
     [HttpPost]
-    public IActionResult Index(PaginationModel<TEntity, TEntity> model)
+    public IActionResult Index(PaginationModel<TModel, TEntity> model)
     {
+        var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
         var query = this.Repository.AsNoTracking();
-        model.OrderBy ??= nameof(BaseEntity.Order);
+        query = query.Include();
+        query = query.Where(model: model.Query);
+        if (isTree)
+        {
+            model.OrderBy ??= $"{nameof(BaseTreeEntity<TEntity>.ParentId)},{nameof(BaseEntity.Order)},{nameof(BaseEntity.CreatedOn)}";
+        }
+        model.TotalCount = query.Count();
         if (model.OrderBy != null)
         {
             query = query.OrderBy(model.OrderBy);
         }
-        model.TotalCount = query.Count();
         query = query.Skip(model.PageSize * (model.PageIndex - 1)).Take(model.PageSize);
-        model.Items = query.ToList()
-            .Select(o => o.ToObject<TEntity>())
-            .ToList();
+        model.Items = query.ToList();
         return Json(model);
     }
 

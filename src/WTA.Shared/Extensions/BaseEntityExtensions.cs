@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using WTA.Shared.Domain;
 using WTA.Shared.GuidGenerators;
+using WTA.Shared.Tenants;
 
 namespace WTA.Shared.Extensions;
 
@@ -10,8 +11,9 @@ public static class BaseEntityExtensions
     {
         using var scope = WebApp.Current.Services.CreateScope();
         entity.Id = scope.ServiceProvider.GetRequiredService<IGuidGenerator>().Create();
+        entity.CreatedOn = DateTime.Now;
         entity.ConcurrencyStamp ??= Guid.NewGuid().ToString("N");
-        //entity.TenantId = scope.ServiceProvider.GetRequiredService<ICurrentUser>().TenantId;
+        entity.TenantId = scope.ServiceProvider.GetRequiredService<ITenantService>().GetTenantId();
         //entity.CreationTime = DateTime.Now;
         //entity.CreatorId = scope.ServiceProvider.GetRequiredService<ICurrentUser>().Id;
     }

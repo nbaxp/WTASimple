@@ -12,7 +12,7 @@ namespace WTA.Application.Identity.Controllers;
 
 [Implement<IAuthenticationService>]
 [ApiExplorerSettings(GroupName = nameof(IdentityModule))]
-public class UserController : GenericController<User>, IAuthenticationService
+public class UserController : GenericController<User, User>, IAuthenticationService
 {
     public UserController(IRepository<User> repository) : base(repository)
     {

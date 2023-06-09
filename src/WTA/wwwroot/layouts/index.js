@@ -15,7 +15,7 @@ export default {
       <el-container class="backtop">
         <el-scrollbar>
           <el-main>
-            <router-view></router-view>
+            <router-view :key="$route.fullPath"></router-view>
           </el-main>
           <el-footer>
             <layout-footer />
