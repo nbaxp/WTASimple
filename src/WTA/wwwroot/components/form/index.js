@@ -3,53 +3,43 @@ import { ref, reactive, watch } from "vue";
 
 export default {
   name: "AppForm",
-  template: html`<el-form ref="formRef" :model="model?.data">
-    <template v-for="(item,key) in model?.schema?.properties">
+  template: html`<el-form ref="formRef" :model="modelValue" label-width="auto">
+    <template v-for="(item,key) in schema?.properties">
       <el-form-item
-        :label="item.title+'：'"
+        :label="item.title"
         :prop="getProp(key)"
-        :rules="getRules(model.schema,item,model.data)"
-        :error="getError(key)"
+        :rules="disableValid?[]:getRules(schema,item,modelValue)"
+        :error="disableValid?null:getError(key)"
       >
-        <el-input :placeholder="item.title" v-model="model.data[key]" type="number" v-if="item.type==='number'" />
+        <el-input :placeholder="item.title" v-model="modelValue[key]" type="number" v-if="item.type==='number'" />
         <el-input-number
           :placeholder="item.title"
-          v-model="model.data[key]"
+          v-model="modelValue[key]"
           :precision="0"
           v-else-if="item.type==='integer'"
         />
-        <el-switch v-model="model.data[key]" type="checked" v-else-if="item.type==='boolean'" />
+        <el-switch v-model="modelValue[key]" type="checked" v-else-if="item.type==='boolean'" />
         <template v-else>
           <el-input
             :placeholder="item.title"
-            v-model="model.data[key]"
+            v-model="modelValue[key]"
             type="password"
             show-password
             v-if="item.format==='password'"
           />
-          <el-input :placeholder="item.title" v-model="model.data[key]" type="text" v-else />
+          <el-input :placeholder="item.title" v-model="modelValue[key]" type="text" v-else />
         </template>
       </el-form-item>
     </template>
-    <el-form-item :label=" ">
+    <el-form-item v-if="!hideButton">
       <template #label></template>
-      <el-button type="primary" @click="submit" :disabled="loading"><slot>确定</slot></el-button>
+      <el-button type="primary" @click="submit" :disabled="loading"><slot>$t('confirm')</slot></el-button>
     </el-form-item>
   </el-form>`,
-  props: {
-    modelValue: { type: Object },
-  },
+  props: ["modelValue", "schema", "action", "hideButton", "disableValid"],
   emits: ["submit"],
   setup(props, context) {
-    // init
-    const model = reactive(props.modelValue);
-    watch(
-      model,
-      (value) => {
-        context.emit("update:modelValue", value);
-      },
-      { deep: true }
-    );
+    const errors = reactive({});
     // ref
     const formRef = ref(null);
     const loading = ref(false);
@@ -59,7 +49,7 @@ export default {
     };
     //
     const getError = (key) => {
-      return model.errors[key];
+      return errors[key];
     };
     //
     const getRules = (parentSchema, property, data) => {
@@ -122,10 +112,11 @@ export default {
     return {
       formRef,
       loading,
-      model,
+      errors,
       getProp,
       getError,
       getRules,
+      reset,
       submit,
     };
   },

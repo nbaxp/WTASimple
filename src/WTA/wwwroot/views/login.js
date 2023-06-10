@@ -1,5 +1,5 @@
 import html, { schemaToModel } from "html";
-import { reactive } from "vue";
+import { ref, reactive } from "vue";
 import AppForm from "../components/form/index.js";
 import { login } from "../api/user.js";
 import { get } from "../request/index.js";
@@ -17,28 +17,26 @@ export default {
           <layout-locale />
         </div>
         <el-card class="box-card" style="width:400px;">
-          <app-form v-model="model" label-width="auto" @submit="submit">{{$t('login')}}</app-form>
+          <app-form :schema="schema" v-model="model" :action="action" @submit="submit">{{$t('login')}}</app-form>
         </el-card>
         <layout-footer />
       </div>
     </el-main>
   </el-container>`,
   async setup() {
-    const schema = (await get("token/create")).data;
-    const model = reactive({
-      schema,
-      data: schemaToModel(schema),
-      errors: {},
-      action: "token/create",
-    });
+    const schema = reactive((await get("token/create")).data);
+    const model = reactive(schemaToModel(schema));
+    const action = ref("token/create");
     const submit = async () => {
-      const result = await login(model.action, model.data);
+      const result = await login(action.value, model);
       if (result.errors) {
         model.errors = result.errors;
       }
     };
     return {
+      schema,
       model,
+      action,
       submit,
     };
   },

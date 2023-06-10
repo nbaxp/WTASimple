@@ -1,6 +1,6 @@
 import html from "html";
 import { useAppStore } from "../store/index.js";
-import Icon from "../components/icon/index.js";
+import SvgIcon from "../components/icon/index.js";
 import LayoutLogo from "./logo.js";
 import { useDark, useToggle } from "@vueuse/core";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -9,14 +9,14 @@ import { logout } from "../api/user.js";
 import LayoutLocale from "./locale.js";
 
 export default {
-  components: { Icon, LayoutLogo, LayoutLocale, ElMessage, ElMessageBox },
+  components: { SvgIcon, LayoutLogo, LayoutLocale, ElMessage, ElMessageBox },
   template: html`
     <div class="flex-justify">
       <div class="flex">
         <layout-logo />
         <el-icon @click="toggleMenuCollapse" class="cursor-pointer">
-          <icon name="unfold" v-if="isCollapse" />
-          <icon name="fold" v-else />
+          <svg-icon name="unfold" v-if="appStore.isMenuCollapse" />
+          <svg-icon name="fold" v-else />
         </el-icon>
       </div>
       <div class="flex">

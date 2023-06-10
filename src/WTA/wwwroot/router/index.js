@@ -118,7 +118,7 @@ const refreshRouter = () => {
         order: o.order,
         permission: o.number,
         isExternal: o.isExternal,
-        isMultiple: o.isMultiple,
+        isTop: o.isTop,
       };
     })
   );
