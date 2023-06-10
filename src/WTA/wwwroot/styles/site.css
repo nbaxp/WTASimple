@@ -100,6 +100,10 @@ a.logo {
   outline: unset;
 }
 
+.el-table .cell {
+  white-space: nowrap;
+}
+
 /* markdown component */
 .markdown-body {
   box-sizing: border-box;

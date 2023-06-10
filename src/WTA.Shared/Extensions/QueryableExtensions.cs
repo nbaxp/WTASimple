@@ -14,7 +14,7 @@ public static class QueryableExtensions
     {
         var properties = model!.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty)
             .Where(o => o.PropertyType.IsValueType || o.PropertyType == typeof(string))
-            .Where(o => o.PropertyType != typeof(bool))
+            .Where(o => o.PropertyType != typeof(bool) && !o.PropertyType.IsEnum)
             .Where(o => !o.CustomAttributes.Any(o => o.AttributeType == typeof(ScaffoldColumnAttribute)));
         foreach (var property in properties)
         {
