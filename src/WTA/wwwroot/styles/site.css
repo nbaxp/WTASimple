@@ -100,12 +100,12 @@ a.logo {
   outline: unset;
 }
 
-.el-table .el-table-fixed-column--right .cell {
-  white-space: nowrap;
-}
-
 .el-form--inline .el-form-item__content {
   width: 192px;
+}
+
+.el-table .cell{
+  white-space: nowrap;
 }
 
 /* markdown component */

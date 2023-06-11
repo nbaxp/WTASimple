@@ -41,8 +41,8 @@ export default {
             :data="data.items"
             @selection-change="handleSelectionChange"
           >
-            <el-table-column type="selection" fixed="left" />
-            <el-table-column :label="$t('rowIndex')" type="index" fixed="left">
+            <el-table-column fixed="left" type="selection" />
+            <el-table-column type="index" :label="$t('rowIndex')">
               <template #default="scope"> {{ (data.pageIndex - 1) * data.pageSize + scope.$index + 1 }} </template>
             </el-table-column>
             <template v-for="(item,key) in tableSchema.items.properties">
@@ -72,14 +72,16 @@ export default {
                 </el-table-column>
               </template>
             </template>
-            <el-table-column :label="$t('operations')" fixed="right">
+            <el-table-column fixed="right" :label="$t('operations')">
               <template #default="scope">
-                <template v-for="item in $route.meta.buttons">
-                  <el-button type="primary" v-if="!item.meta.isTop" @click="click(item,[scope.row])">
-                    {{item.meta.title}}
-                  </el-button>
-                </template>
-                <slot name="rowButtons"></slot>
+                <div class="flex">
+                  <template v-for="item in $route.meta.buttons">
+                    <el-button type="primary" v-if="!item.meta.isTop" @click="click(item,[scope.row])">
+                      {{item.meta.title}}
+                    </el-button>
+                  </template>
+                  <slot name="rowButtons"></slot>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -104,8 +106,9 @@ export default {
       </el-col>
     </el-row>
   `,
-  props: ["modelValue", "api"],
-  async setup() {
+  props: ["modelValue"],
+  emits: ["command"],
+  async setup(props, context) {
     const tableRef = ref(null);
     const selectedRows = ref([]);
     const route = useRoute();
@@ -118,7 +121,7 @@ export default {
     const load = async () => {};
     const click = (item, data) => {
       console.log(item, data);
-      tableRef.value.doLayout();
+      context.emit("command", item, data);
     };
     return {
       route,
