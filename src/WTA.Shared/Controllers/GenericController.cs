@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WTA.Shared.Application;
@@ -29,14 +30,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
     [HttpPost, Multiple, Order(-4)]
     public IActionResult Index([FromBody] PaginationModel<TModel, TEntity> model)
     {
-        var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
-        var query = this.Repository.AsNoTracking();
-        query = query.Include();
-        query = query.Where(model: model.Query);
-        if (isTree)
-        {
-            model.OrderBy ??= $"{nameof(BaseTreeEntity<TEntity>.ParentId)},{nameof(BaseEntity.Order)},{nameof(BaseEntity.CreatedOn)}";
-        }
+        var query = BuildQuery(model);
         model.TotalCount = query.Count();
         if (model.OrderBy != null)
         {
@@ -47,12 +41,32 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(model);
     }
 
+    private IQueryable<TEntity> BuildQuery(PaginationModel<TModel, TEntity> model)
+    {
+        var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
+        var query = this.Repository.AsNoTracking();
+        query = query.Include();
+        query = query.Where(model: model.Query);
+        if (isTree)
+        {
+            model.OrderBy ??= $"{nameof(BaseTreeEntity<TEntity>.ParentId)},{nameof(BaseEntity.Order)},{nameof(BaseEntity.CreatedOn)}";
+        }
+
+        return query;
+    }
+
     [HttpPost, Order(-2)]
     public IActionResult Details(Guid id)
     {
         var entity = this.Repository.AsNoTracking().FirstOrDefault(o => o.Id == id);
         var model = entity?.ToObject<TEntity>();
         return Json(model);
+    }
+
+    [HttpGet]
+    public IActionResult Create()
+    {
+        return Json(typeof(TEntity).GetViewModel());
     }
 
     [HttpPost, Multiple, Order(-3)]
@@ -73,6 +87,16 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
             }
         }
         return Json(model);
+    }
+
+    [HttpGet]
+    public IActionResult Update(Guid id)
+    {
+        return Json(new
+        {
+            Schema = typeof(TEntity).GetMetadataForType(),
+            Model = this.Repository.Queryable().FirstOrDefault(o => o.Id == id)
+        });
     }
 
     [HttpPost, Order(-1)]
@@ -118,11 +142,10 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
     }
 
     [HttpPost, Multiple, Order(-2)]
-    public IActionResult Import(Guid[] guids)
+    public IActionResult Import(IFormFile importexcelfile)
     {
         try
         {
-            this.Repository.Delete(guids);
             return NoContent();
         }
         catch (Exception ex)
@@ -132,12 +155,20 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
     }
 
     [HttpPost, Multiple, Order(-1)]
-    public IActionResult Export(Guid[] guids)
+    public IActionResult Export([FromBody] PaginationModel<TModel, TEntity> model, bool includeAll = false, bool includeDeleted = false)
     {
         try
         {
-            this.Repository.Delete(guids);
-            return NoContent();
+            var query = this.BuildQuery(model);
+            if(!includeAll)
+            {
+                query = query.Skip(model.PageSize * (model.PageIndex - 1)).Take(model.PageSize);
+            }
+            if(includeDeleted)
+            {
+                this.Repository.IncludeDeleted();
+            }
+            return Json(query.ToList());
         }
         catch (Exception ex)
         {

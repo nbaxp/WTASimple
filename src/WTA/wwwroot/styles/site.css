@@ -112,6 +112,11 @@ a.logo {
   margin-right: 5px;
 }
 
+.el-dialog__header,
+.el-dialog__footer {
+  height: 60px;
+}
+
 /* markdown component */
 .markdown-body {
   box-sizing: border-box;

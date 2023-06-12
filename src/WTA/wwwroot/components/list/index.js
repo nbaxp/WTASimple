@@ -3,8 +3,10 @@ import AppForm from "../form/index.js";
 import { get, post } from "../../request/index.js";
 import { ref, reactive } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import SvgIcon from "../../components/icon/index.js";
 import { schemaToModel } from "../../utils/index.js";
+import qs from "../../lib/qs/shim.js";
 
 export default {
   components: { AppForm, SvgIcon },
@@ -14,7 +16,7 @@ export default {
         <app-form
           inline="inline"
           label-position="left"
-          :schema="formSchema"
+          :schema="queryFromSchema"
           v-model="data.query"
           @submit="load"
           :hideButton="true"
@@ -61,19 +63,21 @@ export default {
                 </el-table-column>
               </template>
               <template v-else>
-                <el-table-column :prop="key" :label="item.title" show-overflow-tooltip v-if="!item.hidden">
-                  <template #default="scope">
-                    <el-switch disabled v-model="scope.row[key]" type="checked" v-if="item.type==='boolean'" />
-                    <el-date-picker disabled v-model="scope.row[key]" type="date" v-else-if="item.format==='date'" />
-                    <el-date-picker
-                      disabled
-                      v-model="scope.row[key]"
-                      type="datetime"
-                      v-else-if="item.format==='datetime'"
-                    />
-                    <template v-else>{{ scope.row[key] }}</template>
-                  </template>
-                </el-table-column>
+                <template v-if="!item.hidden&&item.type!=='array'">
+                  <el-table-column :prop="key" :label="item.title" show-overflow-tooltip>
+                    <template #default="scope">
+                      <el-switch disabled v-model="scope.row[key]" type="checked" v-if="item.type==='boolean'" />
+                      <el-date-picker disabled v-model="scope.row[key]" type="date" v-else-if="item.format==='date'" />
+                      <el-date-picker
+                        disabled
+                        v-model="scope.row[key]"
+                        type="datetime"
+                        v-else-if="item.format==='datetime'"
+                      />
+                      <template v-else>{{ scope.row[key] }}</template>
+                    </template>
+                  </el-table-column>
+                </template>
               </template>
             </template>
             <el-table-column fixed="right" :label="$t('operations')">
@@ -110,56 +114,96 @@ export default {
         />
       </el-col>
     </el-row>
+    <el-dialog v-model="dialogVisible" align-center destroy-on-close>
+      <template #header> <span class="el-dialog__title"> {{editFormTitle}} </span> </template>
+      <el-row>
+        <el-col style="height:calc(90vh - 180px );">
+          <el-scrollbar>
+            <app-form inline="inline" label-position="left" :hideButton="true" v-if="editFormSchema.properties" />
+          </el-scrollbar>
+        </el-col>
+      </el-row>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="dialogVisible = false"> {{$t('confirm')}} </el-button>
+        </span>
+      </template>
+    </el-dialog>
   `,
   props: ["modelValue"],
   emits: ["command"],
   async setup(props, context) {
     const tableRef = ref(null);
     const selectedRows = ref([]);
+    const dialogVisible = ref(false);
     const route = useRoute();
+    const { t } = useI18n();
     const url = `${route.meta.path}/index`.substring(1);
     const vm = (await get(url)).data;
     const schema = vm.schema;
     const data = reactive(vm.model ?? schemaToModel(schema));
-    const formSchema = schema.properties.query;
+    const queryFromSchema = schema.properties.query;
     const tableSchema = schema.properties.items;
+    const editFormTitle = ref("");
+    const editFormSchema = reactive({});
+    const editFormModel = reactive({});
+    const exportModel = reactive({
+      includeAll: false,
+      includeDeleted: false,
+    });
     const handleSelectionChange = (rows) => (selectedRows.value = rows);
-    const load = async () => {
-      console.log(data);
+    const load = async (url) => {
       const postData = JSON.parse(JSON.stringify(data));
       delete postData["Id"];
       delete postData["items"];
       Object.assign(data, (await post(url, postData)).data);
     };
-    const remove = async (path, data) => {
-      const url = `${route.meta.path}/${path}`.substring(1);
-      await post(url, data);
-    };
-    const click = async (item, data) => {
-      console.log(item, data);
-      context.emit("command", item, data);
+    const click = async (item, rows) => {
+      console.log(item, rows);
+      context.emit("command", item, rows);
       if (item.path === "index") {
-        await load();
+        await load(url);
+      } else if (item.path === "export") {
+        const url = `${route.meta.path}/${item.path}`.substring(1);
+        const exportUrl = `${url}?${qs.stringify(exportModel)}`;
+        await load(exportUrl);
+      } else if (item.path === "create") {
+        const url = `${route.meta.path}/${item.path}`.substring(1);
+        const vm = await get(url);
+        editFormTitle.value = `${t("create")}${schema.title}`;
+        dialogVisible.value = true;
+      } else if (item.path === "update") {
+        const url = `${route.meta.path}/${item.path}`.substring(1);
+        const vm = await get(url, { id: rows[0]["id"] });
+        editFormTitle.value = `${t("update")}${schema.title}`;
+        dialogVisible.value = true;
       } else if (item.path === "delete") {
-        if (!data.length) {
+        if (!rows.length) {
           return;
         }
-        await remove(
-          item.path,
-          data.map((o) => o.id)
+        const url = `${route.meta.path}/${item.path}`.substring(1);
+        await post(
+          url,
+          rows.map((o) => o.id)
         );
-        await load();
+        await load(url);
       }
     };
-    await load();
+    await load(url);
     return {
       route,
       tableRef,
+      dialogVisible,
       selectedRows,
-      formSchema,
+      schema,
+      queryFromSchema,
       tableSchema,
       data,
       getProp,
+      editFormTitle,
+      editFormSchema,
+      editFormModel,
+      exportModel,
       onPageSizeChange() {},
       onPageIndexChange() {},
       handleSelectionChange,

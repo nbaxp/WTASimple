@@ -33,6 +33,7 @@ public class IdentityConfiguration : IEntityTypeConfiguration<Department>,
 
     public void Configure(EntityTypeBuilder<Permission> builder)
     {
+        builder.Property(o => o.Type).IsRequired();
         builder.Property(o => o.Columns).HasConversion(p => p.ToJson(), p => p.FromJson<Dictionary<string, string>>()!);
     }
 

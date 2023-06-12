@@ -17,4 +17,6 @@ public interface IRepository<T> where T : BaseEntity
     void Insert(T entity);
 
     void SaveChanges();
+
+    void IncludeDeleted();
 }
