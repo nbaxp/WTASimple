@@ -75,6 +75,8 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                     entity.CreatedOn = now;
                     entity.CreatedBy = userName;
                     entity.TenantId = tenant;
+                    entity.IsDisabled ??= false;
+                    entity.IsReadonly ??= false;
                 }
                 else if (item.State == EntityState.Modified)
                 {
@@ -116,10 +118,12 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                 entityTypeBuilder.HasQueryFilter(CreateTenantFilter(entityType, entityTypeBuilder));
                 //软删除
                 entityTypeBuilder.HasQueryFilter(CreateSoftDeleteFilter(entityType, entityTypeBuilder));
-                //主键
+                //基类
                 entityTypeBuilder.HasKey(nameof(BaseEntity.Id));
                 entityTypeBuilder.Property(nameof(BaseEntity.Id)).ValueGeneratedNever();
-
+                entityTypeBuilder.Property(nameof(BaseEntity.IsDisabled)).IsRequired();
+                entityTypeBuilder.Property(nameof(BaseEntity.IsReadonly)).IsRequired();
+                entityTypeBuilder.Property(nameof(BaseEntity.CreatedOn)).IsRequired();
                 //行版本号
                 entityTypeBuilder.Property(nameof(BaseEntity.ConcurrencyStamp)).ValueGeneratedNever();
                 //扩展属性

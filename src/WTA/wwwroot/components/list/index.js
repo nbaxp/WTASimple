@@ -3,9 +3,11 @@ import AppForm from "../form/index.js";
 import { get, post } from "../../request/index.js";
 import { ref, reactive } from "vue";
 import { useRoute } from "vue-router";
+import SvgIcon from "../../components/icon/index.js";
+import { schemaToModel } from "../../utils/index.js";
 
 export default {
-  components: { AppForm },
+  components: { AppForm, SvgIcon },
   template: html`
     <el-row>
       <el-col>
@@ -24,7 +26,8 @@ export default {
       <el-col>
         <template v-for="item in $route.meta.buttons">
           <el-button type="primary" v-if="item.meta.isTop" @click="click(item,selectedRows)">
-            {{item.meta.title}}
+            <el-icon v-if="item.meta.icon"><svg-icon :name="item.meta.icon" /></el-icon>
+            <span>{{item.meta.title}}</span>
           </el-button>
         </template>
       </el-col>
@@ -40,6 +43,7 @@ export default {
             fit
             :data="data.items"
             @selection-change="handleSelectionChange"
+            v-if="data.items"
           >
             <el-table-column fixed="left" type="selection" />
             <el-table-column type="index" :label="$t('rowIndex')">
@@ -47,7 +51,7 @@ export default {
             </el-table-column>
             <template v-for="(item,key) in tableSchema.items.properties">
               <template v-if="key==='properties'">
-                <el-table-column :label="subKey" v-for="(subItem,subKey) in properties">
+                <el-table-column :label="subKey" v-for="(subItem,subKey) in item.properties">
                   <template #default="scope">{{ scope.row[key][subKey] }} </template>
                 </el-table-column>
               </template>
@@ -77,7 +81,8 @@ export default {
                 <div class="flex">
                   <template v-for="item in $route.meta.buttons">
                     <el-button type="primary" v-if="!item.meta.isTop" @click="click(item,[scope.row])">
-                      {{item.meta.title}}
+                      <el-icon v-if="item.meta.icon"><svg-icon :name="item.meta.icon" /></el-icon>
+                      <span>{{item.meta.title}}</span>
                     </el-button>
                   </template>
                   <slot name="rowButtons"></slot>
@@ -91,7 +96,7 @@ export default {
     <el-row>
       <el-col>
         <el-pagination
-          v-if="data.pageSize<data.totalCount"
+          v-if="data.items&&data.pageSize<data.totalCount"
           v-model:currentPage="data.pageIndex"
           v-model:page-size="data.pageSize"
           :total="data.totalCount"
@@ -113,16 +118,40 @@ export default {
     const selectedRows = ref([]);
     const route = useRoute();
     const url = `${route.meta.path}/index`.substring(1);
-    const schema = (await get(url)).data;
+    const vm = (await get(url)).data;
+    const schema = vm.schema;
+    const data = reactive(vm.model ?? schemaToModel(schema));
     const formSchema = schema.properties.query;
     const tableSchema = schema.properties.items;
-    const data = reactive((await post(url)).data);
     const handleSelectionChange = (rows) => (selectedRows.value = rows);
-    const load = async () => {};
-    const click = (item, data) => {
+    const load = async () => {
+      console.log(data);
+      const postData = JSON.parse(JSON.stringify(data));
+      delete postData["Id"];
+      delete postData["items"];
+      Object.assign(data, (await post(url, postData)).data);
+    };
+    const remove = async (path, data) => {
+      const url = `${route.meta.path}/${path}`.substring(1);
+      await post(url, data);
+    };
+    const click = async (item, data) => {
       console.log(item, data);
       context.emit("command", item, data);
+      if (item.path === "index") {
+        await load();
+      } else if (item.path === "delete") {
+        if (!data.length) {
+          return;
+        }
+        await remove(
+          item.path,
+          data.map((o) => o.id)
+        );
+        await load();
+      }
     };
+    await load();
     return {
       route,
       tableRef,

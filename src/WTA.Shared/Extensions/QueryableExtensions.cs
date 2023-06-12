@@ -14,7 +14,6 @@ public static class QueryableExtensions
     {
         var properties = model!.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty)
             .Where(o => o.PropertyType.IsValueType || o.PropertyType == typeof(string))
-            .Where(o => o.PropertyType != typeof(bool) && !o.PropertyType.IsEnum)
             .Where(o => !o.CustomAttributes.Any(o => o.AttributeType == typeof(ScaffoldColumnAttribute)));
         foreach (var property in properties)
         {
@@ -100,7 +99,7 @@ public static class QueryableExtensions
             .Where(o => o.PropertyType.IsValueType && o.PropertyType.GetUnderlyingType() == typeof(Guid));
         foreach (var property in properties)
         {
-            var propertyName = property.Name.Substring(0, property.Name.Length - 2);
+            var propertyName = property.Name[..^2];
             if (typeof(TEntity).GetProperty(propertyName) != null)
             {
                 query = EntityFrameworkQueryableExtensions.Include(query, propertyName);

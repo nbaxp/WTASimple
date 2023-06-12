@@ -104,8 +104,12 @@ a.logo {
   width: 192px;
 }
 
-.el-table .cell{
+.el-table .cell {
   white-space: nowrap;
+}
+
+.el-icon {
+  margin-right: 5px;
 }
 
 /* markdown component */

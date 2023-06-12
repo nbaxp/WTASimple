@@ -13,7 +13,7 @@ export default {
   setup() {
     console.log(router.currentRoute.value.fullPath);
     const onCommand = (item, rows) => {
-      alert(item.path);
+      console.log(item.path, item, rows);
     };
     return { onCommand };
   },

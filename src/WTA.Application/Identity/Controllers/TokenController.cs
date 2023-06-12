@@ -49,7 +49,7 @@ public class TokenController : BaseController
     [AllowAnonymous]
     public object Create()
     {
-        return typeof(LoginRequestModel).GetMetadataForType();
+        return typeof(LoginRequestModel).GetViewModel();
     }
 
     [HttpPost("[action]")]

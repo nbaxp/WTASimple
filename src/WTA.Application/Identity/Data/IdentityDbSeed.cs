@@ -114,8 +114,8 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                 Name = moduleType.GetDisplayName(),
                 Number = moduleType.Name,
                 Path = $"{moduleType.Name.TrimEnd("Module").ToSlugify()}",
-                Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon,
-                Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order
+                Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
+                Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
             };
             m.Value.SelectMany(o => o.Value).ForEach(entityType =>
             {
@@ -130,8 +130,8 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                     Name = entityType.GetDisplayName(),
                     Number = $"{modulePermission.Number}.{entityType.Name}",
                     Path = $"{entityType.Name.ToSlugify()}",
-                    Icon = entityType.GetCustomAttribute<IconAttribute>()?.Icon,
-                    Order = entityType.GetCustomAttribute<OrderAttribute>()?.Order,
+                    Icon = entityType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
+                    Order = entityType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
                     Columns = columns
                 };
 
@@ -148,8 +148,8 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                             Name = groupAttribute.GetType().GetDisplayName(),
                             Number = groupNumber,
                             Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
-                            Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon,
-                            Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order
+                            Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
+                            Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
                         };
                         modulePermission.Children.Add(groupPermission);
                     }
@@ -180,8 +180,8 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                             Number = $"{actionDescriptor?.ControllerName}.{operation}",
                             Path = $"{operation.TrimEnd("Async").ToSlugify()}",
                             Method = method,
-                            Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon,
-                            Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order,
+                            Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
+                            Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
                             IsTop = methodInfo.GetCustomAttribute<MultipleAttribute>() != null
                         }); ;
                     }

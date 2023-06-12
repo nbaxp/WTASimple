@@ -22,9 +22,9 @@ function schemaToModel(schema) {
     } else if (property.type === "array") {
       entity[propertyName] = [];
     } else if (property.type === "boolean") {
-      entity[propertyName] = false;
-    } else if (property.type === "number") {
-      entity[propertyName] = 0;
+      entity[propertyName] = property.nullable ? null : false;
+    } else if (property.type === "number" || property.type === "integer") {
+      entity[propertyName] = property.nullable ? null : 0;
     } else if (property.type === "string") {
       entity[propertyName] = null;
     } else {

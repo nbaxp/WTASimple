@@ -14,9 +14,15 @@ export default {
     onMounted(async () => {
       try {
         const response = await fetch(`./assets/icons/${props.name}.svg`);
-        svg.value = await response.text();
+        if (response.ok && response.status === 200) {
+          svg.value = await response.text();
+        }
       } catch (error) {
-        svg.value = error;
+        console.error(error);
+      }
+      if (!svg.value) {
+        const response = await fetch("./assets/icons/file.svg");
+        svg.value = await response.text();
       }
     });
     return {

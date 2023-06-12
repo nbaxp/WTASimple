@@ -23,11 +23,11 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
     [HttpGet]
     public IActionResult Index()
     {
-        return Json(typeof(PaginationModel<TModel, TEntity>).GetMetadataForType());
+        return Json(typeof(PaginationModel<TModel, TEntity>).GetViewModel());
     }
 
     [HttpPost, Multiple, Order(-4)]
-    public IActionResult Index(PaginationModel<TModel, TEntity> model)
+    public IActionResult Index([FromBody] PaginationModel<TModel, TEntity> model)
     {
         var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
         var query = this.Repository.AsNoTracking();
@@ -56,7 +56,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
     }
 
     [HttpPost, Multiple, Order(-3)]
-    public IActionResult Create(TEntity model)
+    public IActionResult Create([FromBody] TEntity model)
     {
         if (this.ModelState.IsValid)
         {
@@ -76,7 +76,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
     }
 
     [HttpPost, Order(-1)]
-    public IActionResult Update(TEntity model)
+    public IActionResult Update([FromBody] TEntity model)
     {
         if (this.ModelState.IsValid)
         {
@@ -102,12 +102,13 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(model);
     }
 
-    [HttpPost, Multiple, Order]
-    public IActionResult Delete(Guid[] guids)
+    [HttpPost, Multiple, Order(0)]
+    public IActionResult Delete([FromBody] Guid[] guids)
     {
         try
         {
             this.Repository.Delete(guids);
+            this.Repository.SaveChanges();
             return NoContent();
         }
         catch (Exception ex)

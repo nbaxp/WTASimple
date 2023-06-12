@@ -24,8 +24,9 @@ export default {
     </el-main>
   </el-container>`,
   async setup() {
-    const schema = reactive((await get("token/create")).data);
-    const model = reactive(schemaToModel(schema));
+    const vm = (await get("token/create")).data;
+    const schema = reactive(vm.schema);
+    const model = reactive(vm.model ?? schemaToModel(schema));
     const action = ref("token/create");
     const submit = async () => {
       const result = await login(action.value, model);

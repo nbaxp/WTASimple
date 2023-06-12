@@ -3,33 +3,42 @@ import { ref, reactive, watch } from "vue";
 
 export default {
   name: "AppForm",
-  template: html`<el-form ref="formRef" :model="modelValue" label-width="auto">
-    <template v-for="(item,key) in schema?.properties">
-      <el-form-item
-        :label="item.title"
-        :prop="getProp(key)"
-        :rules="disableValid?[]:getRules(schema,item,modelValue)"
-        :error="disableValid?null:getError(key)"
-      >
-        <el-input :placeholder="item.title" v-model="modelValue[key]" type="number" v-if="item.type==='number'" />
-        <el-input-number
-          :placeholder="item.title"
-          v-model="modelValue[key]"
-          :precision="0"
-          v-else-if="item.type==='integer'"
-        />
-        <el-switch v-model="modelValue[key]" type="checked" v-else-if="item.type==='boolean'" />
-        <template v-else>
-          <el-input
+  template: html`<el-form ref="formRef" :model="model" label-width="auto">
+    <template v-for="(item,key) in schema.properties">
+      <template v-if="!item.hidden&&item.type!=='array'">
+        <el-form-item
+          :label="item.title"
+          :prop="getProp(key)"
+          :rules="disableValid?[]:getRules(schema,item,model)"
+          :error="disableValid?null:getError(key)"
+        >
+          <el-input :placeholder="item.title" v-model="model[key]" type="number" v-if="item.type==='number'" />
+          <el-input-number
             :placeholder="item.title"
-            v-model="modelValue[key]"
-            type="password"
-            show-password
-            v-if="item.format==='password'"
+            v-model="model[key]"
+            :precision="0"
+            v-else-if="item.type==='integer'"
           />
-          <el-input :placeholder="item.title" v-model="modelValue[key]" type="text" v-else />
-        </template>
-      </el-form-item>
+          <template v-else-if="item.type==='boolean'">
+            <el-select v-model="model[key]" :placeholder="item.title" v-if="item.nullable">
+              <el-option key="select" :value="null" :label="$t('select')" />
+              <el-option key="true" :value="true" :label="$t('true')" />
+              <el-option key="false" :value="false" :label="$t('false')" />
+            </el-select>
+            <el-switch v-model="model[key]" type="checked" v-else />
+          </template>
+          <template v-else>
+            <el-input
+              :placeholder="item.title"
+              v-model="model[key]"
+              type="password"
+              show-password
+              v-if="item.format==='password'"
+            />
+            <el-input :placeholder="item.title" v-model="model[key]" type="text" v-else />
+          </template>
+        </el-form-item>
+      </template>
     </template>
     <el-form-item v-if="!hideButton">
       <template #label></template>
@@ -37,8 +46,17 @@ export default {
     </el-form-item>
   </el-form>`,
   props: ["modelValue", "schema", "action", "hideButton", "disableValid"],
-  emits: ["submit"],
+  emits: ["update:modelValue", "submit"],
   setup(props, context) {
+    // init
+    const model = reactive(props.modelValue);
+    watch(
+      model,
+      (value) => {
+        context.emit("update:modelValue", value);
+      },
+      { deep: true }
+    );
     const errors = reactive({});
     // ref
     const formRef = ref(null);
@@ -110,6 +128,7 @@ export default {
       }
     };
     return {
+      model,
       formRef,
       loading,
       errors,

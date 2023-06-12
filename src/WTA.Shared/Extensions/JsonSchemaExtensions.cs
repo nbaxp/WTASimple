@@ -1,6 +1,7 @@
 namespace WTA.Shared.Extensions;
 
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +17,13 @@ using WTA.Shared.Attributes;
 
 public static class JsonSchemaExtensions
 {
+    public static object GetViewModel(this Type modelType)
+    {
+        return new {
+            Schema = modelType.GetMetadataForType(),
+            Model = Activator.CreateInstance(modelType)
+        };
+    }
     public static object GetMetadataForType(this Type modelType)
     {
         using var scope = WebApp.Current.Services.CreateScope();
@@ -87,6 +95,10 @@ public static class JsonSchemaExtensions
             else
             {
                 AddType(schema, modelType);
+                if (meta.ModelType.IsNullableType())
+                {
+                    schema.Add("nullable", true);
+                }
             }
         }
 
@@ -103,9 +115,13 @@ public static class JsonSchemaExtensions
             var propertyName = defaultModelMetadata.Name;
             if (propertyName != null)
             {
+                if (defaultModelMetadata.Attributes.Attributes.FirstOrDefault(o => o.GetType() == typeof(DefaultValueAttribute)) is DefaultValueAttribute defaultValue)
+                {
+                    schema.AddNotNull("default", defaultValue.Value);
+                }
                 if (defaultModelMetadata.Attributes.Attributes.FirstOrDefault(o => o.GetType() == typeof(NavigationAttribute)) is NavigationAttribute navigationAttribute)
                 {
-                    var path = navigationAttribute.Path ?? $"{propertyName.Substring(0, propertyName.Length - 2)}.Name";
+                    var path = navigationAttribute.Path ?? $"{propertyName[..^2]}.Name";
                     path = string.Join('.', path.Split('.').Select(o => o.ToLowerCamelCase()));
                     schema.Add("navigation", path);
                 }
@@ -133,6 +149,14 @@ public static class JsonSchemaExtensions
         {
             var message = string.Format(CultureInfo.InvariantCulture, localizer.GetString(nameof(RequiredAttribute)).Value, title);
             rules.Add(new Dictionary<string, object> { { "required", true }, { "message", message } });
+        }
+        if (pm.IsRequired)
+        {
+            if (!pm.ModelType.IsValueType && pm.Attributes.Attributes.Any(o => o.GetType() == typeof(RequiredAttribute)))
+            {
+                var message = string.Format(CultureInfo.InvariantCulture, localizer.GetString(nameof(RequiredAttribute)).Value, title);
+                rules.Add(new Dictionary<string, object> { { "required", true }, { "message", message } });
+            }
         }
         foreach (var item in pm.Attributes.Attributes)
         {
