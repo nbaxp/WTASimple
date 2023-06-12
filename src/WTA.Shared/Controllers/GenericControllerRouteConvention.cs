@@ -12,7 +12,7 @@ public class GenericControllerRouteConvention : IControllerModelConvention
 {
     public void Apply(ControllerModel controller)
     {
-        var baseControllerType = controller.ControllerType.GetBaseClasses().Concat(new Type[] { controller.ControllerType }).FirstOrDefault(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(GenericController<,>));
+        var baseControllerType = controller.ControllerType.GetBaseClasses().Concat(new Type[] { controller.ControllerType }).FirstOrDefault(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(GenericController<,,,,,>));
         if (baseControllerType != null)
         {
             var genericType = baseControllerType.GenericTypeArguments[0];

@@ -119,6 +119,7 @@ const refreshRouter = () => {
         permission: o.number,
         isExternal: o.isExternal,
         isTop: o.isTop,
+        htmlClass: o.htmlClass,
       };
     })
   );

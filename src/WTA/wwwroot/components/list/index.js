@@ -27,7 +27,11 @@ export default {
     <el-row style="padding-bottom:20px;">
       <el-col>
         <template v-for="item in $route.meta.buttons">
-          <el-button type="primary" v-if="item.meta.isTop" @click="click(item,selectedRows)">
+          <el-button
+            :class="item.meta.htmlClass??'el-button--primary'"
+            v-if="item.meta.isTop"
+            @click="click(item,selectedRows)"
+          >
             <el-icon v-if="item.meta.icon"><svg-icon :name="item.meta.icon" /></el-icon>
             <span>{{item.meta.title}}</span>
           </el-button>
@@ -84,7 +88,12 @@ export default {
               <template #default="scope">
                 <div class="flex">
                   <template v-for="item in $route.meta.buttons">
-                    <el-button type="primary" v-if="!item.meta.isTop" @click="click(item,[scope.row])">
+                    <el-button
+                      plain
+                      :class="item.meta.htmlClass??'el-button--primary'"
+                      v-if="!item.meta.isTop"
+                      @click="click(item,[scope.row])"
+                    >
                       <el-icon v-if="item.meta.icon"><svg-icon :name="item.meta.icon" /></el-icon>
                       <span>{{item.meta.title}}</span>
                     </el-button>

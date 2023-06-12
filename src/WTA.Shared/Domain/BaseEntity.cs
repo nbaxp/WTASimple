@@ -20,6 +20,7 @@ public abstract class BaseEntity : IResource, ISoftDeleted
     public bool? IsDisabled { get; set; }
     public bool? IsReadonly { get; set; }
     public int Order { get; set; }
+    public string? HtmlClass { get; set; }
     public DateTime? CreatedOn { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime? UpdatedOn { get; set; }

@@ -182,6 +182,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                             Method = method,
                             Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
                             Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
+                            HtmlClass = methodInfo.GetCustomAttribute<HtmlClassAttribute>()?.Class ?? HtmlClassAttribute.Default,
                             IsTop = methodInfo.GetCustomAttribute<MultipleAttribute>() != null
                         }); ;
                     }

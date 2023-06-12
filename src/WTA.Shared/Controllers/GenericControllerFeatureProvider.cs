@@ -17,11 +17,15 @@ public class GenericControllerFeatureProvider : IApplicationFeatureProvider<Cont
         foreach (var entityTypeInfo in typeInfos)
         {
             var entityType = entityTypeInfo.AsType();
-            var modelType = entityTypeInfo.AsType();
             if (!feature.Controllers.Any(o => o.Name == $"{entityType.Name}Controller"))
             {
-                var typeInfo = typeof(GenericController<,>).MakeGenericType(entityType, modelType).GetTypeInfo();
-                feature.Controllers.Add(typeInfo);
+                var modelType = entityType;
+                var listType = entityType;
+                var searchType = entityType;
+                var importType = entityType;
+                var exportType = entityType;
+                var controllerType = typeof(GenericController<,,,,,>).MakeGenericType(entityType, modelType, listType, searchType, importType, exportType);
+                feature.Controllers.Add(controllerType.GetTypeInfo());
             }
         }
     }

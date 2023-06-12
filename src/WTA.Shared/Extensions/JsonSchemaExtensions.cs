@@ -19,11 +19,13 @@ public static class JsonSchemaExtensions
 {
     public static object GetViewModel(this Type modelType)
     {
-        return new {
+        return new
+        {
             Schema = modelType.GetMetadataForType(),
             Model = Activator.CreateInstance(modelType)
         };
     }
+
     public static object GetMetadataForType(this Type modelType)
     {
         using var scope = WebApp.Current.Services.CreateScope();

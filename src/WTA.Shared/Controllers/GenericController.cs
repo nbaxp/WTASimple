@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WTA.Shared.Application;
 using WTA.Shared.Attributes;
 using WTA.Shared.Data;
@@ -11,14 +12,16 @@ using WTA.Shared.Mappers;
 namespace WTA.Shared.Controllers;
 
 [GenericControllerNameConvention]
-public class GenericController<TEntity, TModel> : BaseController, IResourceService<TEntity>
+public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImportModel, TExportModel> : BaseController, IResourceService<TEntity>
     where TEntity : BaseEntity
 {
-    public GenericController(IRepository<TEntity> repository)
+    public GenericController(ILogger<TEntity> logger, IRepository<TEntity> repository)
     {
+        this.Logger = logger;
         this.Repository = repository;
     }
 
+    public ILogger<TEntity> Logger { get; }
     public IRepository<TEntity> Repository { get; }
 
     [HttpGet]
@@ -27,7 +30,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(typeof(PaginationModel<TModel, TEntity>).GetViewModel());
     }
 
-    [HttpPost, Multiple, Order(-4)]
+    [HttpPost, Multiple, Order(-4), HtmlClass("el-button--info")]
     public IActionResult Index([FromBody] PaginationModel<TModel, TEntity> model)
     {
         var query = BuildQuery(model);
@@ -55,7 +58,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return query;
     }
 
-    [HttpPost, Order(-2)]
+    [HttpPost, Order(-2), HtmlClass("el-button--info")]
     public IActionResult Details(Guid id)
     {
         var entity = this.Repository.AsNoTracking().FirstOrDefault(o => o.Id == id);
@@ -69,7 +72,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(typeof(TEntity).GetViewModel());
     }
 
-    [HttpPost, Multiple, Order(-3)]
+    [HttpPost, Multiple, Order(-3), HtmlClass("el-button--success")]
     public IActionResult Create([FromBody] TEntity model)
     {
         if (this.ModelState.IsValid)
@@ -126,7 +129,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         return Json(model);
     }
 
-    [HttpPost, Multiple, Order(0)]
+    [HttpPost, Multiple, Order(0), HtmlClass("el-button--danger")]
     public IActionResult Delete([FromBody] Guid[] guids)
     {
         try
@@ -141,7 +144,7 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         }
     }
 
-    [HttpPost, Multiple, Order(-2)]
+    [HttpPost, Multiple, Order(-2), HtmlClass("el-button--warning")]
     public IActionResult Import(IFormFile importexcelfile)
     {
         try
@@ -154,17 +157,17 @@ public class GenericController<TEntity, TModel> : BaseController, IResourceServi
         }
     }
 
-    [HttpPost, Multiple, Order(-1)]
+    [HttpPost, Multiple, Order(-1), HtmlClass("el-button--warning")]
     public IActionResult Export([FromBody] PaginationModel<TModel, TEntity> model, bool includeAll = false, bool includeDeleted = false)
     {
         try
         {
             var query = this.BuildQuery(model);
-            if(!includeAll)
+            if (!includeAll)
             {
                 query = query.Skip(model.PageSize * (model.PageIndex - 1)).Take(model.PageSize);
             }
-            if(includeDeleted)
+            if (includeDeleted)
             {
                 this.Repository.IncludeDeleted();
             }

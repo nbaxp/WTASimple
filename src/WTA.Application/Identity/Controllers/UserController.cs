@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WTA.Application.Identity.Entities;
 using WTA.Shared.Attributes;
 using WTA.Shared.Authentication;
@@ -12,9 +13,9 @@ namespace WTA.Application.Identity.Controllers;
 
 [Implement<IAuthenticationService>]
 [ApiExplorerSettings(GroupName = nameof(IdentityModule))]
-public class UserController : GenericController<User, User>, IAuthenticationService
+public class UserController : GenericController<User, User, User, User, User, User>, IAuthenticationService
 {
-    public UserController(IRepository<User> repository) : base(repository)
+    public UserController(ILogger<User> logger, IRepository<User> repository) : base(logger, repository)
     {
     }
 

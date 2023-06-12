@@ -12,7 +12,7 @@ public class ControllerModelConvention : IControllerModelConvention
             if (controller.ApiExplorer.GroupName == null || controller.ControllerName == controller.ApiExplorer.GroupName)
             {
                 var types = controller.ControllerType.GetBaseClasses().Concat(new Type[] { controller.ControllerType });
-                var genericControllerType = types.FirstOrDefault(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(GenericController<,>));
+                var genericControllerType = types.FirstOrDefault(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(GenericController<,,,,,>));
                 if (genericControllerType != null)
                 {
                     var entityType = genericControllerType.GetGenericArguments().FirstOrDefault();
