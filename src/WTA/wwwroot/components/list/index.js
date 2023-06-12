@@ -89,7 +89,6 @@ export default {
                 <div class="flex">
                   <template v-for="item in $route.meta.buttons">
                     <el-button
-                      plain
                       :class="item.meta.htmlClass??'el-button--primary'"
                       v-if="!item.meta.isTop"
                       @click="click(item,[scope.row])"
