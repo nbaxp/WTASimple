@@ -11,6 +11,7 @@ public class JsonStringLocalizerFactory : IStringLocalizerFactory
     {
         this._cache = cache;
     }
+
     public IStringLocalizer Create(Type resourceSource) => new JsonStringLocalizer(this._cache);
 
     public IStringLocalizer Create(string baseName, string location) => new JsonStringLocalizer(this._cache);

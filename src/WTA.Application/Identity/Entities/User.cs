@@ -19,7 +19,6 @@ public class User : BaseEntity
     [ScaffoldColumn(false)]
     public string PasswordHash { get; set; } = null!;
 
-    public bool IsSystem { get; set; }
     public int AccessFailedCount { get; set; }
     public bool LockoutEnabled { get; set; }
     public DateTime? LockoutEnd { get; set; }

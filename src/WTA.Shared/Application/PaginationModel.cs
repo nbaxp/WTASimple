@@ -7,6 +7,7 @@ public class PaginationModel<TSearchModel, TListModel>
     public PaginationModel()
     {
     }
+
     [DefaultValue(1)]
     public int PageIndex { get; set; } = 1;
 

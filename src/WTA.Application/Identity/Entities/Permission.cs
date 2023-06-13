@@ -18,7 +18,6 @@ public class Permission : BaseTreeEntity<Permission>
     public string? Icon { get; set; }
     public string? HtmlClass { get; set; }
     public bool IsTop { get; set; }
-    public bool IsSystem { get; set; }
     public Dictionary<string, string> Columns { get; set; } = new Dictionary<string, string>();
     public List<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

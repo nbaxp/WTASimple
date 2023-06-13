@@ -104,7 +104,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             Path = "home",
             Component = "home",
             Icon = "home",
-            Order = -1,
+            Order = -3,
         }.UpdatePath());
 
         WebApp.Current.ModuleTypes.ForEach(m =>

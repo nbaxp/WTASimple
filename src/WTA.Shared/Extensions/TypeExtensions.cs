@@ -8,6 +8,7 @@ public static class TypeExtensions
     {
         return type.GetCustomAttributes<T>(inherit).Any();
     }
+
     public static Type[] GetBaseClasses(this Type type)
     {
         List<Type> classes = new();
