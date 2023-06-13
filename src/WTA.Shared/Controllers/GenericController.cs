@@ -35,7 +35,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
         return Json(typeof(PaginationModel<TSearchModel, TListModel>).GetViewModel());
     }
 
-    [HttpPost, Multiple, Order(-4), HtmlClass("el-button--info")]
+    [HttpPost, Multiple, Order(-4), HtmlClass("el-button--primary")]
     public IActionResult Index([FromBody] PaginationModel<TSearchModel, TListModel> model)
     {
         var query = BuildQuery(model);
@@ -66,7 +66,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
         return query;
     }
 
-    [HttpPost, Order(-2), HtmlClass("el-button--info")]
+    [HttpPost, Order(-2), HtmlClass("el-button--primary")]
     public IActionResult Details(Guid id)
     {
         var entity = this.Repository.AsNoTracking().FirstOrDefault(o => o.Id == id);
@@ -117,8 +117,8 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
         {
             try
             {
-                var id = model.GetPropertyValue<TModel, Guid>("id");
-                var entity = this.Repository.Queryable().FirstOrDefaultAsync(o => o.Id == id);
+                var id = model.GetPropertyValue<TModel, Guid>(nameof(BaseEntity.Id));
+                var entity = this.Repository.Queryable().FirstOrDefault(o => o.Id == id);
                 if (entity == null)
                 {
                     this.ModelState.AddModelError($"{nameof(id)}", $"not found entity by {id}");
@@ -153,7 +153,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
         }
     }
 
-    [HttpPost, Multiple, Order(-2), HtmlClass("el-button--warning")]
+    [HttpPost, Multiple, Order(-2), HtmlClass("el-button--primary")]
     public IActionResult Import(IFormFile importexcelfile)
     {
         try

@@ -51,6 +51,7 @@
   "Path": "路径",
   "Method": "方法",
   "IsTop": "顶部",
+  "HTMLClass": "class",
   "InternalPath": "内部路径",
   "Component": "组件",
   "ServerTime": "服务器时间",

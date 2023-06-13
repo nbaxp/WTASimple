@@ -73,7 +73,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                 if (item.State == EntityState.Added)
                 {
                     entity.CreatedOn = now;
-                    entity.CreatedBy = userName;
+                    entity.CreatedBy = userName ?? "super";
                     entity.TenantId = tenant;
                     entity.IsDisabled ??= false;
                     entity.IsReadonly ??= false;

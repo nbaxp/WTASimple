@@ -1,6 +1,6 @@
 namespace WTA.Shared.Domain;
 
-public interface ISoftDeleted
+public interface ISoftDeleteEntity
 {
     bool IsDeleted { get; set; }
 }

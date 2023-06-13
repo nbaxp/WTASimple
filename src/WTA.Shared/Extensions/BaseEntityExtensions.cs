@@ -1,17 +1,9 @@
-using Microsoft.Extensions.DependencyInjection;
 using WTA.Shared.Domain;
-using WTA.Shared.GuidGenerators;
 
 namespace WTA.Shared.Extensions;
 
 public static class BaseEntityExtensions
 {
-    public static void Init(this BaseEntity entity)
-    {
-        using var scope = WebApp.Current.Services.CreateScope();
-        entity.Id = scope.ServiceProvider.GetRequiredService<IGuidGenerator>().Create();
-    }
-
     public static TEntity SetIdBy<TEntity>(this TEntity entity, Func<TEntity, object> expression)
         where TEntity : BaseEntity
     {
@@ -21,7 +13,7 @@ public static class BaseEntityExtensions
 
     public static T UpdatePath<T>(this BaseTreeEntity<T> entity, BaseTreeEntity<T>? parent = null) where T : BaseEntity
     {
-        entity.Id = $"{entity.TenantId},{parent?.Number},{entity.Number}".ToGuid();
+        entity.Id = $"{entity.TenantId},{entity.Number}".ToGuid();
         if (parent != null)
         {
             if (parent.InternalPath == null)

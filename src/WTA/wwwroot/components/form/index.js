@@ -9,8 +9,8 @@ export default {
         <el-form-item
           :label="item.title"
           :prop="getProp(key)"
-          :rules="disableValid?[]:getRules(schema,item,model)"
-          :error="disableValid?null:getError(key)"
+          :rules="isQueryOnly?[]:getRules(schema,item,model)"
+          :error="isQueryOnly?null:getError(key)"
         >
           <el-input :placeholder="item.title" v-model="model[key]" type="number" v-if="item.type==='number'" />
           <el-input-number
@@ -45,7 +45,7 @@ export default {
       <el-button type="primary" @click="submit" :disabled="loading"><slot>$t('confirm')</slot></el-button>
     </el-form-item>
   </el-form>`,
-  props: ["modelValue", "schema", "action", "hideButton", "disableValid"],
+  props: ["modelValue", "schema", "action", "hideButton", "isQueryOnly"],
   emits: ["update:modelValue", "submit"],
   setup(props, context) {
     // init
@@ -127,6 +127,8 @@ export default {
         loading.value = false;
       }
     };
+    // expose
+    context.expose({ validate, reset });
     return {
       model,
       formRef,

@@ -23,8 +23,9 @@ public static class ObjectMapperExtensions
     /// </summary>
     public static T FromModel<T>(this T target, object from)
     {
+        var properties = new List<Type>() { typeof(IBaseEntity), typeof(IBaseEntity), typeof(IBaseEntity) }.SelectMany(o => o.GetProperties()).Select(o => o.Name).ToArray(); ;
         using var scope = WebApp.Current.Services!.CreateScope();
-        scope.ServiceProvider.GetRequiredService<IObjectMapper>().FromObject(target, from, typeof(BaseEntity).GetProperties().Select(o => o.Name).ToArray());
+        scope.ServiceProvider.GetRequiredService<IObjectMapper>().FromObject(target, from, properties);
         return target;
     }
 }

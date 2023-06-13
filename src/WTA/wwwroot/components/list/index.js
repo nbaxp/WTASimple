@@ -21,7 +21,7 @@ export default {
           v-model="data.query"
           @submit="load"
           :hideButton="true"
-          :disableValid="true"
+          :isQueryOnly="true"
         />
       </el-col>
     </el-row>
@@ -70,7 +70,7 @@ export default {
               </template>
               <template v-else>
                 <template v-if="!item.hidden&&item.type!=='array'">
-                  <el-table-column :prop="key" :label="item.title" show-overflow-tooltip>
+                  <el-table-column :prop="key" :label="item.title">
                     <template #default="scope">
                       <el-switch disabled v-model="scope.row[key]" type="checked" v-if="item.type==='boolean'" />
                       <el-date-picker disabled v-model="scope.row[key]" type="date" v-else-if="item.format==='date'" />
@@ -124,18 +124,28 @@ export default {
         />
       </el-col>
     </el-row>
-    <el-dialog v-model="dialogVisible" align-center destroy-on-close>
+    <el-dialog v-model="dialogVisible" align-center destroy-on-close width="800" center>
       <template #header> <span class="el-dialog__title"> {{editFormTitle}} </span> </template>
       <el-row>
-        <el-col style="height:calc(90vh - 180px );">
+        <el-col style="max-height:calc(100vh - 180px );">
           <el-scrollbar>
-            <app-form inline="inline" label-position="left" :hideButton="true" v-if="editFormSchema.properties" />
+            <app-form
+              v-loading="editFormloading"
+              :disabled="editFormMode==='details'"
+              ref="editFormRef"
+              inline="inline"
+              label-position="left"
+              :hideButton="true"
+              :schema="editFormSchema"
+              v-model="editFormModel"
+              v-if="editFormMode!=='import'"
+            />
           </el-scrollbar>
         </el-col>
       </el-row>
       <template #footer>
         <span class="dialog-footer">
-          <el-button type="primary" @click="dialogVisible = false"> {{$t('confirm')}} </el-button>
+          <el-button type="primary" @click="submit"> {{$t('confirm')}} </el-button>
         </span>
       </template>
     </el-dialog>
@@ -148,12 +158,16 @@ export default {
     const dialogVisible = ref(false);
     const route = useRoute();
     const { t } = useI18n();
-    const url = `${route.meta.path}/index`.substring(1);
-    const vm = (await get(url)).data;
+    const baseUrl = `${route.meta.path}`.substring(1);
+    const indexUrl = `${baseUrl}/index`;
+    const vm = (await get(indexUrl)).data;
     const schema = vm.schema;
     const data = reactive(vm.model ?? schemaToModel(schema));
     const queryFromSchema = schema.properties.query;
     const tableSchema = schema.properties.items;
+    const editFormRef = ref(null);
+    const editFormloading = ref(false);
+    const editFormMode = ref(null);
     const editFormTitle = ref("");
     const editFormSchema = reactive({});
     const editFormModel = reactive({});
@@ -169,47 +183,84 @@ export default {
       Object.assign(data, (await post(url, postData)).data);
     };
     const click = async (item, rows) => {
-      console.log(item, rows);
+      editFormMode.value = item.path;
       context.emit("command", item, rows);
       if (item.path === "index") {
-        await load(url);
+        //list
+        await load(indexUrl);
       } else if (item.path === "details") {
-        const url = `${route.meta.path}/${item.path}`.substring(1);
-        const detailsUrl = `${url}?${qs.stringify(rows[0].id)}`;
+        //details
+        const detailsUrl = `${baseUrl}/${item.path}?${qs.stringify({ id: rows[0].id })}`;
+        Object.assign(editFormSchema, schema.properties.items.items);
+        Object.assign(editFormMode, (await post(detailsUrl)).data);
+        editFormMode.value = item.path;
         editFormTitle.value = `${t("details")}${schema.title}`;
         dialogVisible.value = true;
       } else if (item.path === "create") {
-        const url = `${route.meta.path}/${item.path}`.substring(1);
-        const vm = await get(url);
-        editFormTitle.value = `${t("create")}${schema.title}`;
+        //create
+        const url = `${baseUrl}/${item.path}`;
+        const vm = (await get(url)).data;
+        Object.assign(editFormSchema, vm.schema);
+        Object.assign(editFormModel, vm.model);
+        editFormMode.value = item.path;
+        editFormTitle.value = `${t("update")}${schema.title}`;
         dialogVisible.value = true;
       } else if (item.path === "update") {
-        const url = `${route.meta.path}/${item.path}`.substring(1);
-        const vm = await get(url, { id: rows[0].id });
+        //update
+        const url = `${baseUrl}/${item.path}`;
+        const vm = (await get(url, { id: rows[0].id })).data;
+        Object.assign(editFormSchema, vm.schema);
+        Object.assign(editFormModel, vm.model);
+        editFormMode.value = item.path;
         editFormTitle.value = `${t("update")}${schema.title}`;
         dialogVisible.value = true;
       } else if (item.path === "delete") {
+        //delete
         if (!rows.length) {
           return;
         }
-        const url = `${route.meta.path}/${item.path}`.substring(1);
+        const url = `${baseUrl}/${item.path}`;
         await post(
           url,
           rows.map((o) => o.id)
         );
         await load(url);
       } else if (item.path === "export") {
-        const url = `${route.meta.path}/${item.path}`.substring(1);
+        //export
+        const url = `${baseUrl}/${item.path}`;
         const exportUrl = `${url}?${qs.stringify(exportModel)}`;
         await load(exportUrl);
       } else if (item.path === "import") {
-        const url = `${route.meta.path}/${item.path}`.substring(1);
-        const exportUrl = `${url}?${qs.stringify(exportModel)}`;
+        //import
+        const url = `${baseUrl}/${item.path}`;
         editFormTitle.value = `${t("import")}${schema.title}`;
         dialogVisible.value = true;
       }
     };
-    await load(url);
+    const submit = async () => {
+      if (editFormMode.value === "create" || editFormMode.value === "update") {
+        try {
+          const valid = await editFormRef.value.validate();
+          if (valid) {
+            editFormloading.value = true;
+            const url = `${baseUrl}/${editFormMode.value}`;
+            const result = await post(url, editFormModel);
+            if (result.errors) {
+              model.errors = result.errors;
+            } else {
+              await load(indexUrl);
+              editFormMode.value = null;
+              dialogVisible.value = false;
+            }
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          editFormloading.value = false;
+        }
+      }
+    };
+    await load(indexUrl);
     return {
       route,
       tableRef,
@@ -220,6 +271,8 @@ export default {
       tableSchema,
       data,
       getProp,
+      editFormRef,
+      editFormMode,
       editFormTitle,
       editFormSchema,
       editFormModel,
@@ -229,6 +282,7 @@ export default {
       handleSelectionChange,
       load,
       click,
+      submit,
     };
   },
 };

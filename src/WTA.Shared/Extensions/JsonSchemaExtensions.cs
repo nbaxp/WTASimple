@@ -107,11 +107,7 @@ public static class JsonSchemaExtensions
         schema.AddNotNull("description", meta.Description);
         schema.AddNotNull("format", meta.DataTypeName?.ToLowerCamelCase());
         schema.AddNotNull("control", meta.TemplateHint?.ToLowerCamelCase());
-        // Scaffold(false)
-        if (!meta.ShowForDisplay)
-        {
-            schema.Add("hidden", true);
-        }
+
         if (meta is DefaultModelMetadata defaultModelMetadata)
         {
             var propertyName = defaultModelMetadata.Name;
@@ -126,6 +122,23 @@ public static class JsonSchemaExtensions
                     var path = navigationAttribute.Path ?? $"{propertyName[..^2]}.Name";
                     path = string.Join('.', path.Split('.').Select(o => o.ToLowerCamelCase()));
                     schema.Add("navigation", path);
+                }
+                if (defaultModelMetadata.Attributes.Attributes.FirstOrDefault(o => o.GetType() == typeof(ScaffoldColumnAttribute)) is ScaffoldColumnAttribute scaffoldColumnAttribute
+                    && !scaffoldColumnAttribute.Scaffold)
+                {
+                    //列表、详情、新建、更新、查询都不显示
+                    schema.Add("hidden", true);
+                }
+                if (defaultModelMetadata.Attributes.Attributes.FirstOrDefault(o => o.GetType() == typeof(ReadOnlyAttribute)) is ReadOnlyAttribute readOnlyAttribute
+                    && readOnlyAttribute.IsReadOnly)
+                {
+                    //列表、详情显示，编辑时不显示，查询时显示
+                    schema.Add("readOnly", true);
+                }
+                if (defaultModelMetadata.Attributes.Attributes.Any(o => o.GetType() == typeof(DisplayOnlyAttribute)))
+                {
+                    //列表、详情、编辑时都只显示，查询时显示
+                    schema.Add("displayOnly", true);
                 }
             }
         }
