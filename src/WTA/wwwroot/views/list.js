@@ -6,8 +6,8 @@ export default {
   components: { AppList },
   template: html`<el-scrollbar>
     <app-list @command="onCommand">
-      <template v-slot:topButtons><el-button>{{$t('test')}}</el-button></template>
-      <template v-slot:rowButtons><el-button>{{$t('test')}}</el-button></template>
+      <template #tableButtons="{rows}"><el-button>{{$t('test')}}</el-button></template>
+      <template #rowButtons="{rows}"><el-button>{{$t('test')}}</el-button></template>
     </app-list>
   </el-scrollbar>`,
   setup() {

@@ -37,6 +37,7 @@ export default {
             <span>{{item.meta.title}}</span>
           </el-button>
         </template>
+        <slot name="tableButtons" :rows="selectedRows"></slot>
       </el-col>
     </el-row>
     <el-row>
@@ -98,7 +99,7 @@ export default {
                       <span>{{item.meta.title}}</span>
                     </el-button>
                   </template>
-                  <slot name="rowButtons"></slot>
+                  <slot name="rowButtons" :rows="[scope.row]"></slot>
                 </div>
               </template>
             </el-table-column>
