@@ -83,13 +83,17 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                     entity.UpdatedOn = now;
                     entity.UpdatedBy = userName;
                 }
-                //else if (item.State == EntityState.Deleted)
-                //{
-                //    item.State = EntityState.Modified;
-                //    entity.IsDeleted = true;
-                //    entity.DeletedOn = now;
-                //    entity.DeletedBy = userName;
-                //}
+                else if (item.State == EntityState.Deleted)
+                {
+                    //if (entity is ISoftDeleteEntity)
+                    //{
+                    //    throw new Exception("内置数据无法删除");
+                    //}
+                    if (entity.IsReadonly.HasValue && entity.IsReadonly.Value)
+                    {
+                        throw new Exception("内置数据无法删除");
+                    }
+                }
                 entity.ConcurrencyStamp = Guid.NewGuid().ToString();
             }
         }
@@ -189,7 +193,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                     && e.ContainsGenericParameters
                     && e.GetParameters().SingleOrDefault()?.ParameterType.GetGenericTypeDefinition()
                     == typeof(IEntityTypeConfiguration<>));
-        if (WebApp.Current.DbConfigTypes.TryGetValue(this.GetType(), out var configTypes))
+        if (WebApp.Current.DbConfigTypes.TryGetValue(GetType(), out var configTypes))
         {
             configTypes.ForEach(configType =>
             {

@@ -31,7 +31,6 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
         context.Set<Department>().Add(
             new Department
             {
-                IsReadonly = true,
                 Name = "企业",
                 Number = "Enterprise",
                 Children = new List<Department>
@@ -77,6 +76,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
         // 用户初始化
         var superUser = new User
         {
+            IsReadonly = true,
             UserName = "super",
             NormalizedUserName = "super".Normalize(),
             Name = "超级管理员",
@@ -97,6 +97,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
 
         context.Set<Permission>().Add(new Permission
         {
+            IsReadonly = true,
             Type = PermissionType.Resource,
             Name = "首页",
             Number = "home",

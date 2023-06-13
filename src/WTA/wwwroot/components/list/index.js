@@ -21,7 +21,7 @@ export default {
           v-model="data.query"
           @submit="load"
           :hideButton="true"
-          :isQueryOnly="true"
+          :isQueryForm="true"
         />
       </el-col>
     </el-row>

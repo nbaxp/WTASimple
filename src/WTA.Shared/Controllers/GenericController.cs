@@ -30,13 +30,13 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     public IRepository<TEntity> Repository { get; }
 
     [HttpGet]
-    public IActionResult Index()
+    public virtual IActionResult Index()
     {
         return Json(typeof(PaginationModel<TSearchModel, TListModel>).GetViewModel());
     }
 
     [HttpPost, Multiple, Order(-4), HtmlClass("el-button--primary")]
-    public IActionResult Index([FromBody] PaginationModel<TSearchModel, TListModel> model)
+    public virtual IActionResult Index([FromBody] PaginationModel<TSearchModel, TListModel> model)
     {
         var query = BuildQuery(model);
         model.TotalCount = query.Count();
@@ -52,7 +52,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
         return Json(model);
     }
 
-    private IQueryable<TEntity> BuildQuery(PaginationModel<TSearchModel, TListModel> model)
+    protected virtual IQueryable<TEntity> BuildQuery(PaginationModel<TSearchModel, TListModel> model)
     {
         var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
         var query = this.Repository.AsNoTracking();
@@ -67,7 +67,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpPost, Order(-2), HtmlClass("el-button--primary")]
-    public IActionResult Details(Guid id)
+    public virtual IActionResult Details(Guid id)
     {
         var entity = this.Repository.AsNoTracking().FirstOrDefault(o => o.Id == id);
         var model = entity?.ToObject<TModel>();
@@ -81,7 +81,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpPost, Multiple, Order(-3), HtmlClass("el-button--success")]
-    public IActionResult Create([FromBody] TModel model)
+    public virtual IActionResult Create([FromBody] TModel model)
     {
         if (this.ModelState.IsValid)
         {
@@ -101,7 +101,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpGet]
-    public IActionResult Update(Guid id)
+    public virtual IActionResult Update(Guid id)
     {
         return Json(new
         {
@@ -111,7 +111,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpPost, Order(-1)]
-    public IActionResult Update([FromBody] TModel model)
+    public virtual IActionResult Update([FromBody] TModel model)
     {
         if (this.ModelState.IsValid)
         {
@@ -139,7 +139,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpPost, Multiple, Order(0), HtmlClass("el-button--danger")]
-    public IActionResult Delete([FromBody] Guid[] guids)
+    public virtual IActionResult Delete([FromBody] Guid[] guids)
     {
         try
         {
@@ -154,7 +154,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpPost, Multiple, Order(-2), HtmlClass("el-button--primary")]
-    public IActionResult Import(IFormFile importexcelfile)
+    public virtual IActionResult Import(IFormFile importexcelfile)
     {
         try
         {
@@ -167,7 +167,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpPost, Multiple, Order(-1), HtmlClass("el-button--warning")]
-    public IActionResult Export([FromBody] PaginationModel<TSearchModel, TListModel> model, bool includeAll = false, bool includeDeleted = false)
+    public virtual IActionResult Export([FromBody] PaginationModel<TSearchModel, TListModel> model, bool includeAll = false, bool includeDeleted = false)
     {
         try
         {

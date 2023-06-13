@@ -23,6 +23,9 @@ public abstract class BaseEntity : IResource, IBaseEntity, ISoftDeleteEntity, IA
     [Required]
     public bool? IsDisabled { get; set; }
 
+    /// <summary>
+    /// 内置数据（非全部种子数据）初始化时设置为true，不可删除
+    /// </summary>
     [Required]
     public bool? IsReadonly { get; set; }
 
