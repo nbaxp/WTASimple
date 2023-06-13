@@ -7,9 +7,10 @@ import { useI18n } from "vue-i18n";
 import SvgIcon from "../../components/icon/index.js";
 import { schemaToModel } from "../../utils/index.js";
 import qs from "../../lib/qs/shim.js";
+import VueOfficeExcel from "@vue-office/excel";
 
 export default {
-  components: { AppForm, SvgIcon },
+  components: { AppForm, SvgIcon, VueOfficeExcel },
   template: html`
     <el-row>
       <el-col>
@@ -171,10 +172,11 @@ export default {
       context.emit("command", item, rows);
       if (item.path === "index") {
         await load(url);
-      } else if (item.path === "export") {
+      } else if (item.path === "details") {
         const url = `${route.meta.path}/${item.path}`.substring(1);
-        const exportUrl = `${url}?${qs.stringify(exportModel)}`;
-        await load(exportUrl);
+        const detailsUrl = `${url}?${qs.stringify(rows[0].id)}`;
+        editFormTitle.value = `${t("details")}${schema.title}`;
+        dialogVisible.value = true;
       } else if (item.path === "create") {
         const url = `${route.meta.path}/${item.path}`.substring(1);
         const vm = await get(url);
@@ -182,7 +184,7 @@ export default {
         dialogVisible.value = true;
       } else if (item.path === "update") {
         const url = `${route.meta.path}/${item.path}`.substring(1);
-        const vm = await get(url, { id: rows[0]["id"] });
+        const vm = await get(url, { id: rows[0].id });
         editFormTitle.value = `${t("update")}${schema.title}`;
         dialogVisible.value = true;
       } else if (item.path === "delete") {
@@ -195,6 +197,15 @@ export default {
           rows.map((o) => o.id)
         );
         await load(url);
+      } else if (item.path === "export") {
+        const url = `${route.meta.path}/${item.path}`.substring(1);
+        const exportUrl = `${url}?${qs.stringify(exportModel)}`;
+        await load(exportUrl);
+      } else if (item.path === "import") {
+        const url = `${route.meta.path}/${item.path}`.substring(1);
+        const exportUrl = `${url}?${qs.stringify(exportModel)}`;
+        editFormTitle.value = `${t("import")}${schema.title}`;
+        dialogVisible.value = true;
       }
     };
     await load(url);

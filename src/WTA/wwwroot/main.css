@@ -3,5 +3,6 @@
 @import url("./lib/element-plus/theme-chalk/dark/css-vars.css");
 @import url("./lib/github-markdown-css/github-markdown.min.css");
 @import url("./lib/highlightjs/highlight.css");
+@import url("./lib/@vue-office/excel/index.css");
 @import url("./styles/class.css");
 @import url("./styles/site.css");

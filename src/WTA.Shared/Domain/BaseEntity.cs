@@ -17,10 +17,13 @@ public abstract class BaseEntity : IResource, ISoftDeleted
     //[ScaffoldColumn(false)]
     public bool IsDeleted { get; set; }
 
+    [Required]
     public bool? IsDisabled { get; set; }
+    [Required]
     public bool? IsReadonly { get; set; }
     public int Order { get; set; }
     public string? HtmlClass { get; set; }
+    [Required]
     public DateTime? CreatedOn { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime? UpdatedOn { get; set; }

@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
 
+[Hidden]
 [Display(Name = "角色权限")]
 public class RolePermission : BaseEntity
 {

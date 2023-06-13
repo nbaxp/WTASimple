@@ -14,6 +14,11 @@ namespace WTA.Shared.Controllers;
 [GenericControllerNameConvention]
 public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImportModel, TExportModel> : BaseController, IResourceService<TEntity>
     where TEntity : BaseEntity
+    where TModel : class
+    where TListModel : class
+    where TSearchModel : class
+    where TImportModel : class
+    where TExportModel : class
 {
     public GenericController(ILogger<TEntity> logger, IRepository<TEntity> repository)
     {
@@ -27,11 +32,11 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     [HttpGet]
     public IActionResult Index()
     {
-        return Json(typeof(PaginationModel<TModel, TEntity>).GetViewModel());
+        return Json(typeof(PaginationModel<TSearchModel, TListModel>).GetViewModel());
     }
 
     [HttpPost, Multiple, Order(-4), HtmlClass("el-button--info")]
-    public IActionResult Index([FromBody] PaginationModel<TModel, TEntity> model)
+    public IActionResult Index([FromBody] PaginationModel<TSearchModel, TListModel> model)
     {
         var query = BuildQuery(model);
         model.TotalCount = query.Count();
@@ -40,11 +45,14 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
             query = query.OrderBy(model.OrderBy);
         }
         query = query.Skip(model.PageSize * (model.PageIndex - 1)).Take(model.PageSize);
-        model.Items = query.ToList();
+        model.Items = query
+            .ToList()
+            .Select(o => o.ToObject<TListModel>())
+            .ToList();
         return Json(model);
     }
 
-    private IQueryable<TEntity> BuildQuery(PaginationModel<TModel, TEntity> model)
+    private IQueryable<TEntity> BuildQuery(PaginationModel<TSearchModel, TListModel> model)
     {
         var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
         var query = this.Repository.AsNoTracking();
@@ -62,18 +70,18 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     public IActionResult Details(Guid id)
     {
         var entity = this.Repository.AsNoTracking().FirstOrDefault(o => o.Id == id);
-        var model = entity?.ToObject<TEntity>();
+        var model = entity?.ToObject<TModel>();
         return Json(model);
     }
 
     [HttpGet]
     public IActionResult Create()
     {
-        return Json(typeof(TEntity).GetViewModel());
+        return Json(typeof(TModel).GetViewModel());
     }
 
     [HttpPost, Multiple, Order(-3), HtmlClass("el-button--success")]
-    public IActionResult Create([FromBody] TEntity model)
+    public IActionResult Create([FromBody] TModel model)
     {
         if (this.ModelState.IsValid)
         {
@@ -97,22 +105,23 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     {
         return Json(new
         {
-            Schema = typeof(TEntity).GetMetadataForType(),
+            Schema = typeof(TModel).GetMetadataForType(),
             Model = this.Repository.Queryable().FirstOrDefault(o => o.Id == id)
         });
     }
 
     [HttpPost, Order(-1)]
-    public IActionResult Update([FromBody] TEntity model)
+    public IActionResult Update([FromBody] TModel model)
     {
         if (this.ModelState.IsValid)
         {
             try
             {
-                var entity = this.Repository.Queryable().FirstOrDefaultAsync(o => o.Id == model.Id);
+                var id = model.GetPropertyValue<TModel, Guid>("id");
+                var entity = this.Repository.Queryable().FirstOrDefaultAsync(o => o.Id == id);
                 if (entity == null)
                 {
-                    this.ModelState.AddModelError($"{nameof(model.Id)}", $"not found entity by {model.Id}");
+                    this.ModelState.AddModelError($"{nameof(id)}", $"not found entity by {id}");
                 }
                 else
                 {
@@ -158,7 +167,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     }
 
     [HttpPost, Multiple, Order(-1), HtmlClass("el-button--warning")]
-    public IActionResult Export([FromBody] PaginationModel<TModel, TEntity> model, bool includeAll = false, bool includeDeleted = false)
+    public IActionResult Export([FromBody] PaginationModel<TSearchModel, TListModel> model, bool includeAll = false, bool includeDeleted = false)
     {
         try
         {

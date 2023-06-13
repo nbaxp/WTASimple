@@ -109,7 +109,7 @@ const reset = (list, parentPath = null) => {
 
 const refreshRouter = () => {
   const appStore = useAppStore();
-  const permissions = appStore.user.permissions;
+  const permissions = appStore.user.permissions.filter((o) => !o.isHidden);
   const tree = reset(
     listToTree(permissions, (o) => {
       o.meta = {

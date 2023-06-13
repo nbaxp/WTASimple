@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using LinqToDB.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -114,6 +115,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                 Name = moduleType.GetDisplayName(),
                 Number = moduleType.Name,
                 Path = $"{moduleType.Name.TrimEnd("Module").ToSlugify()}",
+                IsHidden = moduleType.HasAttribute<HiddenAttribute>(),
                 Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
                 Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
             };
@@ -130,6 +132,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                     Name = entityType.GetDisplayName(),
                     Number = $"{modulePermission.Number}.{entityType.Name}",
                     Path = $"{entityType.Name.ToSlugify()}",
+                    IsHidden = entityType.HasAttribute<HiddenAttribute>(),
                     Icon = entityType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
                     Order = entityType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
                     Columns = columns
@@ -148,6 +151,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                             Name = groupAttribute.GetType().GetDisplayName(),
                             Number = groupNumber,
                             Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
+                            IsHidden = groupAttribute.GetType().HasAttribute<HiddenAttribute>(),
                             Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
                             Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
                         };
@@ -179,6 +183,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                             Name = methodInfo.GetDisplayName(),
                             Number = $"{actionDescriptor?.ControllerName}.{operation}",
                             Path = $"{operation.TrimEnd("Async").ToSlugify()}",
+                            IsHidden = methodInfo.GetCustomAttributes<HiddenAttribute>().Any(),
                             Method = method,
                             Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
                             Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,

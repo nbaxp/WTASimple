@@ -11,9 +11,7 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>,
 {
     public void Configure(EntityTypeBuilder<Tenant> builder)
     {
-        builder.Property(o => o.Name).IsRequired();
         builder.HasIndex(o => o.Name).IsUnique();
-        builder.Property(o => o.Number).IsRequired();
         builder.HasIndex(o => o.Number).IsUnique();
     }
 

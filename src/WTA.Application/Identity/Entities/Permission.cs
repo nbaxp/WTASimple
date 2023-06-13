@@ -6,6 +6,7 @@ namespace WTA.Application.Identity.Entities;
 [Display(Name = "权限")]
 public class Permission : BaseTreeEntity<Permission>
 {
+    [Required]
     public PermissionType? Type { get; set; }
     public bool IsHidden { get; set; }
     public bool IsExternal { get; set; }

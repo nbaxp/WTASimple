@@ -37,12 +37,14 @@ function schemaToModel(schema) {
 function listToTree(list, func) {
   const tree = [];
   list.forEach((item) => {
-    const parent = list.find((node) => node.id === item.parentId);
-    if (parent) {
-      parent.children = parent.children || [];
-      parent.children.push(item);
-    } else {
+    if (!item.parentId) {
       tree.push(item);
+    } else {
+      const parent = list.find((node) => node.id === item.parentId);
+      if (parent) {
+        parent.children = parent.children || [];
+        parent.children.push(item);
+      }
     }
     if (func) {
       func(item);

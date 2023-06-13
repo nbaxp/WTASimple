@@ -19,7 +19,7 @@ public class UserController : GenericController<User, User, User, User, User, Us
     {
     }
 
-    [HttpPost]
+    [HttpPost, Hidden]
     public AuthenticateResult Authenticate(string name, string operation)
     {
         var query = this.Repository.AsNoTracking();
@@ -51,7 +51,7 @@ public class UserController : GenericController<User, User, User, User, User, Us
         return result;
     }
 
-    [HttpPost]
+    [HttpPost, Hidden]
     [Display(Name = "用户信息")]
     public User? Info()
     {

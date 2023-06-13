@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
 
+[Hidden]
 [Display(Name = "用户角色")]
 public class UserRole : BaseEntity
 {

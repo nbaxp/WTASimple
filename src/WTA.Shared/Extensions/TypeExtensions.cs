@@ -1,7 +1,13 @@
+using System.Reflection;
+
 namespace WTA.Shared.Extensions;
 
 public static class TypeExtensions
 {
+    public static bool HasAttribute<T>(this Type type, bool inherit = true) where T : Attribute
+    {
+        return type.GetCustomAttributes<T>(inherit).Any();
+    }
     public static Type[] GetBaseClasses(this Type type)
     {
         List<Type> classes = new();
