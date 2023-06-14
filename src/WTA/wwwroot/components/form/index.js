@@ -16,6 +16,7 @@ export default {
         :errors="errors"
       />
     </template>
+    <slot name="items"></slot>
     <el-form-item v-if="!hideButton">
       <template #label></template>
       <el-button type="primary" @click="submit" :disabled="loading"><slot>$t('confirm')</slot></el-button>

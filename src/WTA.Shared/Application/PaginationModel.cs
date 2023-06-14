@@ -16,7 +16,6 @@ public class PaginationModel<TSearchModel, TListModel>
 
     public string? OrderBy { get; set; }
     public int TotalCount { get; set; }
-    public bool QueryAll { get; set; }
     public List<TListModel> Items { get; set; } = new List<TListModel>();
     public TSearchModel Query { get; set; } = Activator.CreateInstance<TSearchModel>();
 }

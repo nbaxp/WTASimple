@@ -14,15 +14,30 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using WTA.Shared.Application;
 using WTA.Shared.Attributes;
+using WTA.Shared.Domain;
 
 public static class JsonSchemaExtensions
 {
     public static object GetViewModel(this Type modelType)
     {
+        var model = Activator.CreateInstance(modelType);
+        if (modelType.IsGenericType && modelType.GetGenericTypeDefinition() == typeof(PaginationModel<,>))
+        {
+            if (model != null && model.GetPropertyValue<object, object>("Query") is BaseEntity entity)
+            {
+                entity.GetType().GetProperties().ForEach(o =>
+                {
+                    if (o.PropertyType.IsNullableType())
+                    {
+                        o.SetValue(entity, null);
+                    }
+                });
+            }
+        }
         return new
         {
             Schema = modelType.GetMetadataForType(),
-            Model = Activator.CreateInstance(modelType)
+            Model = model
         };
     }
 

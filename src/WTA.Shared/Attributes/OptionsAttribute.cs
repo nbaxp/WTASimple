@@ -5,7 +5,7 @@ public class OptionsAttribute : Attribute
 {
     public OptionsAttribute(string? section = null)
     {
-        Section = section;
+        this.Section = section;
     }
 
     public string? Section { get; }

@@ -37,6 +37,8 @@
   "AccessFailedCount": "登录失败次数",
   "IsSystem": "系统内置",
   "IsReadonly": "只读",
+  "Audit": "审计",
+  "Filter": "过滤",
   "CreatedOn": "创建时间",
   "CreatedBy": "创建人",
   "UpdatedOn": "修改时间",

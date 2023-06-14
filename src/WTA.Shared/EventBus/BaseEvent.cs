@@ -4,10 +4,10 @@ public class BaseEvent<T>
 {
     public BaseEvent(T data, string type)
     {
-        Id = Guid.NewGuid();
-        CreationDate = DateTime.UtcNow;
-        Type = type;
-        Data = data;
+        this.Id = Guid.NewGuid();
+        this.CreationDate = DateTime.UtcNow;
+        this.Type = type;
+        this.Data = data;
     }
 
     public Guid Id { get; }

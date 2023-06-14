@@ -32,7 +32,7 @@ export default {
       if (props.schema.hidden) {
         return false;
       }
-      if ((props.mode === "create" || props.mode === "update") && props.schema.readOnly) {
+      if (props.schema.readOnly && (props.mode === "query" || props.mode === "create" || props.mode === "update")) {
         return false;
       }
       return true;

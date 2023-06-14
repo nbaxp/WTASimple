@@ -13,6 +13,6 @@ public class CustomModelMetaDataProvider : DefaultModelMetadataProvider
 
     protected override ModelMetadata CreateModelMetadata(DefaultMetadataDetails entry)
     {
-        return new CustomModelMetadata(this, DetailsProvider, entry, ModelBindingMessageProvider);
+        return new CustomModelMetadata(this, this.DetailsProvider, entry, this.ModelBindingMessageProvider);
     }
 }

@@ -47,6 +47,7 @@ export default {
         <el-scrollbar>
           <el-table
             ref="tableRef"
+            v-loading="tableLoading"
             row-key="id"
             table-layout="auto"
             border
@@ -71,7 +72,7 @@ export default {
                 </el-table-column>
               </template>
               <template v-else>
-                <template v-if="!item.hidden&&item.type!=='array'">
+                <template v-if="showColumn(item,key)">
                   <el-table-column :prop="key" :label="item.title">
                     <template #default="scope">
                       <app-form-input :isReadOnly="true" :schema="item" :prop="key" v-model="scope.row" />
@@ -80,7 +81,13 @@ export default {
                 </template>
               </template>
             </template>
-            <el-table-column fixed="right" :label="$t('operations')">
+            <el-table-column fixed="right">
+              <template #header>
+                <el-button @click="filterDrawer = true">
+                  {{$t('operations')}}
+                  <el-icon class="el-icon--right"><ep-filter /></el-icon>
+                </el-button>
+              </template>
               <template #default="scope">
                 <div class="flex">
                   <template v-for="item in $route.meta.buttons">
@@ -118,6 +125,33 @@ export default {
         />
       </el-col>
     </el-row>
+    <el-drawer v-model="filterDrawer" destroy-on-close @close="tableRef.doLayout()">
+      <template #header> <span class="el-dialog__title"> {{$t('filter')}} </span> </template>
+      <el-row>
+        <el-col style="max-height:calc(100vh - 180px );">
+          <el-scrollbar>
+            <el-form inline>
+              <el-form-item>
+                <el-button type="primary" @click="columns.forEach(o=>o.checked=true)"> {{$t('selectAll')}} </el-button>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="columns.forEach(o=>o.checked=!o.checked)">
+                  {{$t('selectInverse')}}
+                </el-button>
+              </el-form-item>
+              <el-form-item v-for="item in columns">
+                <el-checkbox v-model="item.checked" :label="item.title" size="large" />
+              </el-form-item>
+            </el-form>
+          </el-scrollbar>
+        </el-col>
+      </el-row>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="filterDrawer=false"> {{$t('confirm')}} </el-button>
+        </span>
+      </template>
+    </el-drawer>
     <el-dialog v-model="dialogVisible" align-center destroy-on-close width="700">
       <template #header> <span class="el-dialog__title"> {{editFormTitle}} </span> </template>
       <el-row>
@@ -149,6 +183,9 @@ export default {
   emits: ["command"],
   async setup(props, context) {
     const tableRef = ref(null);
+    const columns = ref([]);
+    const filterDrawer = ref(false);
+    const tableLoading = ref(false);
     const selectedRows = ref([]);
     const dialogVisible = ref(false);
     const route = useRoute();
@@ -158,6 +195,23 @@ export default {
     const vm = (await get(indexUrl)).data;
     const schema = vm.schema;
     const data = reactive(vm.model ?? schemaToModel(schema));
+    const getColumns = (schema) => {
+      Object.keys(schema.properties).forEach((propertyName) => {
+        const property = schema.properties[propertyName];
+        if (property.type !== "object" && property.type !== "array" && !property.hidden) {
+          columns.value.push({ name: propertyName, title: property.title, checked: true });
+        }
+      });
+    };
+    const showColumn = (item, prop) => {
+      return (
+        item.type !== "object" &&
+        item.type !== "array" &&
+        !item.hidden &&
+        columns.value.findIndex((o) => o.name === prop && o.checked) >= 0
+      );
+    };
+    getColumns(schema.properties.query);
     const queryFromSchema = schema.properties.query;
     const tableSchema = schema.properties.items;
     const editFormRef = ref(null);
@@ -172,11 +226,20 @@ export default {
     });
     const handleSelectionChange = (rows) => (selectedRows.value = rows);
     const load = async (url) => {
-      const postData = JSON.parse(JSON.stringify(data));
-      delete postData["Id"];
-      delete postData["items"];
-      Object.assign(data, (await post(url, postData)).data);
+      tableLoading.value = true;
+      try {
+        const postData = JSON.parse(JSON.stringify(data));
+        delete postData["Id"];
+        delete postData["items"];
+        Object.assign(data, (await post(url, postData)).data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        tableLoading.value = false;
+      }
     };
+    const onPageIndexChange = () => load(indexUrl);
+    const onPageSizeChange = () => load(indexUrl);
     const click = async (item, rows) => {
       editFormMode.value = item.path;
       context.emit("command", item, rows);
@@ -216,7 +279,7 @@ export default {
           url,
           rows.map((o) => o.id)
         );
-        await load(url);
+        await load(indexUrl);
       } else if (item.path === "export") {
         //export
         const url = `${baseUrl}/${item.path}`;
@@ -260,6 +323,10 @@ export default {
     return {
       route,
       tableRef,
+      tableLoading,
+      columns,
+      showColumn,
+      filterDrawer,
       dialogVisible,
       selectedRows,
       schema,
@@ -273,8 +340,8 @@ export default {
       editFormSchema,
       editFormModel,
       exportModel,
-      onPageSizeChange() {},
-      onPageIndexChange() {},
+      onPageSizeChange,
+      onPageIndexChange,
       handleSelectionChange,
       load,
       click,
