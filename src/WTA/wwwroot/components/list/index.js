@@ -127,9 +127,9 @@ export default {
     </el-row>
     <el-drawer v-model="filterDrawer" destroy-on-close @close="tableRef.doLayout()">
       <template #header> <span class="el-dialog__title"> {{$t('filter')}} </span> </template>
-      <el-row>
-        <el-col style="max-height:calc(100vh - 180px );">
-          <el-scrollbar>
+      <el-scrollbar>
+        <el-row>
+          <el-col style="max-height:calc(100vh - 180px);">
             <el-form inline>
               <el-form-item>
                 <el-button type="primary" @click="columns.forEach(o=>o.checked=true)"> {{$t('selectAll')}} </el-button>
@@ -143,9 +143,10 @@ export default {
                 <el-checkbox v-model="item.checked" :label="item.title" size="large" />
               </el-form-item>
             </el-form>
-          </el-scrollbar>
-        </el-col>
-      </el-row>
+          </el-col>
+        </el-row>
+      </el-scrollbar>
+
       <template #footer>
         <span class="dialog-footer">
           <el-button type="primary" @click="filterDrawer=false"> {{$t('confirm')}} </el-button>

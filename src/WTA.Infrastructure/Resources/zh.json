@@ -38,6 +38,8 @@
   "IsSystem": "系统内置",
   "IsReadonly": "只读",
   "Audit": "审计",
+  "SelectAll": "全选",
+  "SelectInverse": "反选",
   "Filter": "过滤",
   "CreatedOn": "创建时间",
   "CreatedBy": "创建人",
