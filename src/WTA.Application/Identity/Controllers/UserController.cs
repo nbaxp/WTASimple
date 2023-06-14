@@ -17,16 +17,18 @@ public class UserController : GenericController<User, User, User, User, User, Us
 {
     public UserController(ILogger<User> logger, IRepository<User> repository) : base(logger, repository)
     {
+        this.Repository.DisableTenantFilter();
     }
 
     [HttpPost, Hidden]
     public AuthenticateResult Authenticate(string name, string operation)
     {
         var query = this.Repository.AsNoTracking();
-
+        var sql = query.ToQueryString();
         var result = new AuthenticateResult
         {
-            Succeeded = query.Any(o => o.UserName == name && o.UserRoles.Any(o => o.Role.RolePermissions.Any(o => o.Permission.Type == PermissionType.Operation && o.Permission.Number == operation)))
+            Succeeded = query.Any(o => o.UserName == name &&
+            o.UserRoles.Any(o => o.Role.RolePermissions.Any(o => o.Permission.Type == PermissionType.Operation && o.Permission.Number == operation)))
         };
         if (result.Succeeded)
         {

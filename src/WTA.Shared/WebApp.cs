@@ -612,22 +612,18 @@ public class WebApp
                 {
                     var connectionStringName = dbContextType.Name.TrimEnd("DbContext");
                     var connectionString = builder.Configuration.GetConnectionString(connectionStringName);
-                    var tenantsOptions = this.Services.GetRequiredService<IOptions<TenantsOptions>>().Value;
-                    if (tenantsOptions.IsEnabled && tenantsOptions.DatabasePerTenant)
+                    if (!dbContextType.CustomAttributes.Any(o => o.AttributeType == typeof(IgnoreMultiTenancyAttribute)))
                     {
-                        if (!dbContextType.CustomAttributes.Any(o => o.AttributeType == typeof(IgnoreMultiTenancyAttribute)))
+                        var tenantService = this.Services.GetService<ITenantService>();
+                        if (tenantService != null)
                         {
-                            var tenantService = this.Services.GetService<ITenantService>();
-                            if (tenantService != null)
+                            var tenantId = tenantService?.GetTenantId();
+                            if (tenantId != null)
                             {
-                                var tenantId = tenantService?.GetTenantId();
-                                if (tenantId != null)
+                                connectionString = tenantService?.GetConnectionString(connectionStringName);
+                                if (string.IsNullOrEmpty(connectionString))
                                 {
-                                    connectionString = tenantService?.GetConnectionString(connectionStringName);
-                                    if (string.IsNullOrEmpty(connectionString))
-                                    {
-                                        throw new Exception("租户不存在");
-                                    }
+                                    throw new Exception("租户不存在");
                                 }
                             }
                         }

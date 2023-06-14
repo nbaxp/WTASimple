@@ -7,7 +7,9 @@ using WTA.Shared.Extensions;
 namespace WTA.Shared.Data.Config;
 
 [DbContext<IdentityDbContext>]
-public class IdentityConfiguration : IEntityTypeConfiguration<Department>,
+public class IdentityConfiguration : IEntityTypeConfiguration<Tenant>,
+    IEntityTypeConfiguration<ConnectionString>,
+    IEntityTypeConfiguration<Department>,
     IEntityTypeConfiguration<User>,
      IEntityTypeConfiguration<Role>,
      IEntityTypeConfiguration<Permission>,
@@ -15,6 +17,17 @@ public class IdentityConfiguration : IEntityTypeConfiguration<Department>,
      IEntityTypeConfiguration<RolePermission>,
      IEntityTypeConfiguration<JobItem>
 {
+    public void Configure(EntityTypeBuilder<Tenant> builder)
+    {
+        builder.HasIndex(o => o.Name).IsUnique();
+        builder.HasIndex(o => o.Number).IsUnique();
+    }
+
+    public void Configure(EntityTypeBuilder<ConnectionString> builder)
+    {
+        builder.HasOne(o => o.Parent).WithMany(o => o.ConnectionStrings).HasForeignKey(o => o.ParentId).OnDelete(DeleteBehavior.Cascade);
+    }
+
     public void Configure(EntityTypeBuilder<Department> builder)
     {
     }

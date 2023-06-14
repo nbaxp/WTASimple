@@ -27,6 +27,19 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
 
     public void Seed(IdentityDbContext context)
     {
+        //租户初始化
+        var tenant = new Tenant
+        {
+            Name = "默认",
+            Number = "default",
+            DataBaseCreated = false,
+            ConnectionStrings = new List<ConnectionString>
+            {
+                new ConnectionString(){ Name="Identity",Value="Data Source=data2.db" }
+            }
+        }.SetIdBy(o => o.Number);
+        context.Set<Tenant>().Add(tenant);
+        var defaultTenantId = tenant.Id;
         //部门初始化
         context.Set<Department>().Add(
             new Department

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Tenants.Entities;
+namespace WTA.Application.Identity.Entities;
 
 [Display(Name = "租户")]
 public class Tenant : BaseEntity

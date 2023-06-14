@@ -57,7 +57,10 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
         var isTree = typeof(TEntity).IsAssignableTo(typeof(BaseTreeEntity<TEntity>));
         var query = this.Repository.AsNoTracking();
         query = query.Include();
-        query = query.Where(model: model.Query);
+        if (model.Query != null)
+        {
+            query = query.Where(model: model.Query);
+        }
         if (isTree)
         {
             model.OrderBy ??= $"{nameof(BaseTreeEntity<TEntity>.ParentId)},{nameof(BaseEntity.Order)},{nameof(BaseEntity.CreatedOn)}";
@@ -178,7 +181,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
             }
             if (includeDeleted)
             {
-                this.Repository.IncludeDeleted();
+                this.Repository.DisableSoftDeleteFilter();
             }
             return Json(query.ToList());
         }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Tenants.Entities;
+namespace WTA.Application.Identity.Entities;
 
 [Display(Name = "连接字符串")]
 public class ConnectionString : BaseEntity

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
+using Autofac;
 using ExpressionDebugger;
 using LinqToDB.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
@@ -10,7 +11,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 using WTA.Shared.Extensions;
@@ -29,8 +29,6 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
 
     private readonly string _tablePrefix;
 
-    private readonly TenantsOptions _tenantsOptions;
-
     static BaseDbContext()
     {
         LinqToDBForEFTools.Initialize();
@@ -38,8 +36,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
 
     public BaseDbContext(DbContextOptions<T> options) : base(options)
     {
-        this._tablePrefix = this.GetTablePrefix();
-        this._tenantsOptions = this.GetService<IOptions<TenantsOptions>>().Value;
+        this._tablePrefix = GetTablePrefix();
         this._tenantId = this.GetService<ITenantService>()?.GetTenantId();
     }
 
@@ -74,7 +71,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                 {
                     entity.CreatedOn = now;
                     entity.CreatedBy = userName ?? "super";
-                    entity.TenantId = tenant;
+                    entity.TenantId = tenant ?? "default";
                     entity.IsDisabled ??= false;
                     entity.IsReadonly ??= false;
                 }
@@ -118,10 +115,10 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
             //实体
             if (entityType.IsAssignableTo(typeof(BaseEntity)))
             {
-                //租户过滤
-                entityTypeBuilder.HasQueryFilter(CreateTenantFilter(entityType, entityTypeBuilder));
                 //软删除
-                entityTypeBuilder.HasQueryFilter(CreateSoftDeleteFilter(entityType, entityTypeBuilder));
+                this.GetType().GetMethod(nameof(this.CreateSoftDeleteFilter))?.MakeGenericMethod(entityType).Invoke(this, new object[] { modelBuilder });
+                //租户过滤
+                this.GetType().GetMethod(nameof(this.CreateTenantFilter))?.MakeGenericMethod(entityType).Invoke(this, new object[] { modelBuilder });
                 //基类
                 entityTypeBuilder.HasKey(nameof(BaseEntity.Id));
                 entityTypeBuilder.Property(nameof(BaseEntity.Id)).ValueGeneratedNever();
@@ -213,34 +210,14 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
         }
     }
 
-    private LambdaExpression CreateSoftDeleteFilter(Type entityType, EntityTypeBuilder entityTypeBuilder)
+    public void CreateSoftDeleteFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
     {
-        var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.IsDeleted));
-        var parameter = Expression.Parameter(entityType, "p");
-        var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
-        Expression<Func<bool>> expression = () => false;
-        var right = expression.Body;
-        var filter = Expression.Lambda(Expression.OrElse(
-            Expression.Equal(() => !this.DisableSoftDeleteFilter, () => true),
-            Expression.Equal(left, right)),
-            parameter);
-        Debug.WriteLine(filter.ToScript());
-        return filter;
+        builder.Entity<TEntity>().HasQueryFilter(o => this.DisableSoftDeleteFilter || o.IsDeleted == false);
     }
 
-    private LambdaExpression CreateTenantFilter(Type entityType, EntityTypeBuilder entityTypeBuilder)
+    public void CreateTenantFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
     {
-        var tenantProperty = entityTypeBuilder.Metadata.FindProperty(nameof(BaseEntity.TenantId));
-        var parameter = Expression.Parameter(entityType, "p");
-        var left = Expression.Property(parameter, tenantProperty!.PropertyInfo!);
-        Expression<Func<string>> expression = () => this._tenantId!;
-        var right = expression.Body;
-        var filter = Expression.Lambda(Expression.OrElse(
-            Expression.Equal(() => this._tenantsOptions.IsEnabled && !this._tenantsOptions.DatabasePerTenant && !this.DisableTenantFilter, () => true),
-            Expression.Equal(left, right)),
-            parameter);
-        Debug.WriteLine(filter.ToScript());
-        return filter;
+        builder.Entity<TEntity>().HasQueryFilter(o => this.DisableTenantFilter || o.TenantId == this._tenantId);
     }
 
     private List<EntityEntry> GetEntries()

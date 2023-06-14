@@ -50,8 +50,13 @@ public class EfRepository<TEntity> : IRepository<TEntity> where TEntity : BaseEn
         this._dbContext.SaveChanges();
     }
 
-    public void IncludeDeleted()
+    public void DisableSoftDeleteFilter()
     {
         this._dbContext.GetType().GetProperty("DisableSoftDeleteFilter")?.SetValue(this._dbContext, true);
+    }
+
+    public void DisableTenantFilter()
+    {
+        this._dbContext.GetType().GetProperty("DisableTenantFilter")?.SetValue(this._dbContext, true);
     }
 }

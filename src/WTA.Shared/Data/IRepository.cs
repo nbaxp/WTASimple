@@ -18,5 +18,6 @@ public interface IRepository<T> where T : BaseEntity
 
     void SaveChanges();
 
-    void IncludeDeleted();
+    void DisableSoftDeleteFilter();
+    void DisableTenantFilter();
 }

@@ -7,7 +7,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using WTA.Application.Identity.Entities;
 using WTA.Application.Identity.Models;
-using WTA.Application.Tenants.Entities;
 using WTA.Shared.Authentication;
 using WTA.Shared.Controllers;
 using WTA.Shared.Data;
@@ -43,6 +42,7 @@ public class TokenController : BaseController
         this._passwordHasher = passwordHasher;
         this._tenantRepository = _tenantRepository;
         this._userRepository = userRepository;
+        this._userRepository.DisableTenantFilter();
     }
 
     [HttpGet("[action]")]

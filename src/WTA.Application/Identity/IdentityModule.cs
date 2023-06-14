@@ -8,6 +8,7 @@ using WTA.Shared.Module;
 namespace WTA.Application.Identity;
 
 [Display(Name = "系统管理"), Order(-2)]
+[IgnoreMultiTenancy]
 public class IdentityModule : BaseModule
 {
     public override void Configure(WebApplication app)

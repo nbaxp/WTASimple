@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using WTA.Application.Tenants.Entities;
+using WTA.Application.Identity.Entities;
 using WTA.Shared.Attributes;
 using WTA.Shared.Data;
 using WTA.Shared.Tenants;
 
-namespace WTA.Application.Tenants;
+namespace WTA.Application.Identity;
 
 [Implement<ITenantService>]
 public class TenantService : ITenantService
@@ -28,6 +28,7 @@ public class TenantService : ITenantService
     {
         using var scope = this._serviceProvider.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IRepository<Tenant>>();
+        repository.DisableTenantFilter();
         return repository
             .AsNoTracking()
             .Where(o => o.Number == this._tenant)
