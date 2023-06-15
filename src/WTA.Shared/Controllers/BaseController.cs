@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using WTA.Shared.Domain;
 
 namespace WTA.Shared.Controllers;
 
@@ -27,6 +28,8 @@ public class BaseController : Controller
                 context.Result = this.Forbid();
             }
         }
+        context.ModelState.Remove(nameof(BaseEntity.CreatedOn));
+        context.ModelState.Remove(nameof(BaseEntity.ConcurrencyStamp));
     }
 
     [ApiExplorerSettings(IgnoreApi = true)]

@@ -12,7 +12,6 @@ using WTA.Shared.Extensions;
 namespace WTA.Application.Identity.Controllers;
 
 [Implement<IAuthenticationService>]
-[ApiExplorerSettings(GroupName = nameof(IdentityModule))]
 public class UserController : GenericController<User, User, User, User, User, User>, IAuthenticationService
 {
     public UserController(ILogger<User> logger, IRepository<User> repository) : base(logger, repository)

@@ -207,8 +207,9 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
 
     public void CreateQueryFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
     {
-        builder.Entity<TEntity>().HasQueryFilter(o => (this.DisableSoftDeleteFilter || !o.IsDeleted) &&
-        (this.DisableTenantFilter || o.TenantId == this._tenantId));
+        builder.Entity<TEntity>().HasQueryFilter(o =>
+        (this.DisableSoftDeleteFilter == true || !o.IsDeleted) &&
+        (this.DisableTenantFilter == true || o.TenantId == this._tenantId));
     }
 
     private List<EntityEntry> GetEntries()
