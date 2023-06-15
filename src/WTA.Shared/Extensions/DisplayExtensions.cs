@@ -31,4 +31,12 @@ public static class DisplayExtensions
         var key = propertyInfo.GetCustomAttribute<DisplayAttribute>()?.Name ?? propertyInfo.Name;
         return localizer?.GetString(key, $"{propertyInfo.ReflectedType!.Name}.{key}") ?? key;
     }
+
+    public static string GetDisplayName(this Enum enumValue)
+    {
+        var scope = WebApp.Current.Services?.CreateScope();
+        var localizer = scope?.ServiceProvider.GetService<IStringLocalizer>();
+        var key = enumValue.GetAttributeOfType<DisplayAttribute>()?.Name ?? enumValue.ToString();
+        return localizer?.GetString(key, $"{enumValue.GetType()!.Name}.{key}") ?? key;
+    }
 }

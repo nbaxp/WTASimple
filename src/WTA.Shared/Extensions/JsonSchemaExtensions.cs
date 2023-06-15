@@ -111,6 +111,10 @@ public static class JsonSchemaExtensions
             }
             else
             {
+                if (modelType.IsEnum)
+                {
+                    schema.Add("options", Enum.GetNames(modelType).Select(o => new { Value = o, Label = ((Enum)Enum.Parse(modelType, o)).GetDisplayName() }).ToArray());
+                }
                 AddType(schema, modelType);
                 if (meta.ModelType.IsNullableType())
                 {
