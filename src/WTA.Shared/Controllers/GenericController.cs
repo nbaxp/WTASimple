@@ -40,7 +40,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     {
         var query = BuildQuery(model);
         model.TotalCount = query.Count();
-        if (model.OrderBy != null)
+        if (!string.IsNullOrEmpty(model.OrderBy))
         {
             query = query.OrderBy(model.OrderBy);
         }

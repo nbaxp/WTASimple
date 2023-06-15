@@ -9,6 +9,7 @@ import { schemaToModel } from "../../utils/index.js";
 import qs from "../../lib/qs/shim.js";
 import AppFormInput from "../form/form-input.js";
 import VueOfficeExcel from "@vue-office/excel";
+import { camelCase, capitalize } from "lodash";
 
 export default {
   components: { AppForm, SvgIcon, AppFormInput, VueOfficeExcel },
@@ -54,6 +55,8 @@ export default {
             fit
             :data="data.items"
             @selection-change="handleSelectionChange"
+            @sort-change="sortChange"
+            :header-cell-class-name="getClass"
             v-if="data.items"
           >
             <el-table-column fixed="left" type="selection" />
@@ -73,7 +76,8 @@ export default {
               </template>
               <template v-else>
                 <template v-if="showColumn(item,key)">
-                  <el-table-column :prop="key" :label="item.title">
+                  <el-table-column :prop="key" sortable="custom" :sort-orders="['descending', 'ascending', null]">
+                    <template #header="scope">{{item.title}}</template>
                     <template #default="scope">
                       <app-form-input :isReadOnly="true" :schema="item" :prop="key" v-model="scope.row" />
                     </template>
@@ -197,6 +201,36 @@ export default {
     const vm = (await get(indexUrl)).data;
     const schema = vm.schema;
     const data = reactive(vm.model ?? schemaToModel(schema));
+    const sortColumns = ref(new Map());
+    const getSortModel = (model) => {
+      const orderBy = model.orderBy
+        .split(",")
+        .map((o) => o.trim())
+        .filter((o) => o)
+        .map((o) => ({
+          prop: camelCase(o.split(" ")[0]),
+          order: (o.split(" ").filter((o) => o)[1] ?? "asc") + "ending",
+        }))
+        .forEach((o) => sortColumns.value.set(o.prop, o.order));
+      return orderBy;
+    };
+    const sortModel = reactive(getSortModel(data));
+    const getClass = ({ row, column }) => {
+      if (column.property) {
+        column.order = sortColumns.value.get(column.property);
+      }
+    };
+    const sortChange = ({ column, prop, order }) => {
+      if (order === null) {
+        sortColumns.value.delete(prop);
+      } else {
+        sortColumns.value.set(prop, order);
+      }
+      data.orderBy = Array.from(sortColumns.value)
+        .map((o) => capitalize(o[0]) + (o[1] === "ascending" ? "" : ` DESC`))
+        .join(",");
+      load(indexUrl);
+    };
     const getColumns = (schema) => {
       Object.keys(schema.properties).forEach((propertyName) => {
         const property = schema.properties[propertyName];
@@ -335,6 +369,9 @@ export default {
       queryFromSchema,
       tableSchema,
       data,
+      sortModel,
+      getClass,
+      sortChange,
       getProp,
       editFormRef,
       editFormMode,

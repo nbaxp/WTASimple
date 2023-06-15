@@ -1,11 +1,16 @@
 import html from "html";
 import { ref, reactive, watch } from "vue";
+import { dayjs } from "element-plus";
 
 export default {
   template: html`
     <template v-if="getDisabled()">
-      <el-switch disabled v-model="model[prop]" type="checked" v-if="schema.type==='boolean'" />
-      <template v-else>{{model[prop]}}</template>
+      <template v-if="model[prop]!==null">
+        <el-switch disabled v-model="model[prop]" type="checked" v-if="schema.type==='boolean'" />
+        <template v-else-if="schema.format==='datetime'">{{dayjs(model[prop]).format('YYYY-MM-DD HH:mm:ss')}}</template>
+        <template v-else-if="schema.format==='date'">{{dayjs(model[prop]).format('YYYY-MM-DD')}}</template>
+        <template v-else>{{model[prop]}}</template>
+      </template>
     </template>
     <template v-else>
       <el-input
@@ -67,6 +72,7 @@ export default {
     return {
       model,
       getDisabled,
+      dayjs,
     };
   },
 };
