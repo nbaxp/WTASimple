@@ -27,6 +27,8 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
 
     public void Seed(IdentityDbContext context)
     {
+        context.DisableTenantFilter = true; ;
+        context.DisableSoftDeleteFilter = true;
         //租户初始化
         var tenant = new Tenant
         {

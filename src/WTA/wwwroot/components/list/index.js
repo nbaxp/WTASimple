@@ -81,6 +81,7 @@ export default {
                 </template>
               </template>
             </template>
+            <slot name="columns"></slot>
             <el-table-column fixed="right">
               <template #header>
                 <el-button @click="filterDrawer = true">

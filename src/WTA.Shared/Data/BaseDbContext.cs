@@ -1,14 +1,10 @@
-using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Reflection;
 using Autofac;
-using ExpressionDebugger;
 using LinqToDB.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WTA.Shared.Attributes;
@@ -115,10 +111,9 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
             //实体
             if (entityType.IsAssignableTo(typeof(BaseEntity)))
             {
-                //软删除
-                this.GetType().GetMethod(nameof(this.CreateSoftDeleteFilter))?.MakeGenericMethod(entityType).Invoke(this, new object[] { modelBuilder });
-                //租户过滤
-                this.GetType().GetMethod(nameof(this.CreateTenantFilter))?.MakeGenericMethod(entityType).Invoke(this, new object[] { modelBuilder });
+                //软删除、租户过滤
+                this.GetType().GetMethod(nameof(this.CreateQueryFilter))?.MakeGenericMethod(entityType).Invoke(this, new object[] { modelBuilder });
+                //
                 //基类
                 entityTypeBuilder.HasKey(nameof(BaseEntity.Id));
                 entityTypeBuilder.Property(nameof(BaseEntity.Id)).ValueGeneratedNever();
@@ -210,14 +205,10 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
         }
     }
 
-    public void CreateSoftDeleteFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
+    public void CreateQueryFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
     {
-        builder.Entity<TEntity>().HasQueryFilter(o => this.DisableSoftDeleteFilter || o.IsDeleted == false);
-    }
-
-    public void CreateTenantFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
-    {
-        builder.Entity<TEntity>().HasQueryFilter(o => this.DisableTenantFilter || o.TenantId == this._tenantId);
+        builder.Entity<TEntity>().HasQueryFilter(o => (this.DisableSoftDeleteFilter || !o.IsDeleted) &&
+        (this.DisableTenantFilter || o.TenantId == this._tenantId));
     }
 
     private List<EntityEntry> GetEntries()

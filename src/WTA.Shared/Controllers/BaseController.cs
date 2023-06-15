@@ -20,11 +20,11 @@ public class BaseController : Controller
             var operaation = $"{descriptor.ControllerName}.{descriptor.ActionName}";
             if (!this.HttpContext.User.Identity!.IsAuthenticated)
             {
-                context.Result = this.Unauthorized("未登录");
+                context.Result = this.Unauthorized();
             }
             else if (!context.HttpContext.User.IsInRole(operaation))
             {
-                context.Result = this.Forbid("无权限");
+                context.Result = this.Forbid();
             }
         }
     }

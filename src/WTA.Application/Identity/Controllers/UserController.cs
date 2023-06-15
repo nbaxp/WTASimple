@@ -24,7 +24,6 @@ public class UserController : GenericController<User, User, User, User, User, Us
     public AuthenticateResult Authenticate(string name, string operation)
     {
         var query = this.Repository.AsNoTracking();
-        var sql = query.ToQueryString();
         var result = new AuthenticateResult
         {
             Succeeded = query.Any(o => o.UserName == name &&
