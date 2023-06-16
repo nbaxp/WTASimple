@@ -42,6 +42,10 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
         }.SetIdBy(o => o.Number);
         context.Set<Tenant>().Add(tenant);
         var defaultTenantId = tenant.Id;
+
+        // 权限初始化
+        InitPermissions(context);
+
         //部门初始化
         context.Set<Department>().Add(
             new Department
@@ -64,9 +68,6 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                     }
                 }
             }.UpdatePath());
-
-        // 权限初始化
-        InitPermissions(context);
 
         // 角色初始化
         var superRole = new Role
@@ -117,6 +118,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             Name = "首页",
             Number = "home",
             Path = "home",
+            Method = "POST",
             Component = "home",
             Icon = "home",
             Order = -3,

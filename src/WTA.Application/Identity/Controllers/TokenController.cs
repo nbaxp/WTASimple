@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using WTA.Application.Identity.Entities;
 using WTA.Application.Identity.Models;
+using WTA.Shared.Application;
 using WTA.Shared.Authentication;
 using WTA.Shared.Controllers;
 using WTA.Shared.Data;
@@ -17,7 +18,7 @@ namespace WTA.Application.Identity.Controllers;
 
 [Route("api/{culture=zh}/[controller]")]
 [ApiExplorerSettings(GroupName = nameof(IdentityModule))]
-public class TokenController : BaseController
+public class TokenController : BaseController, IResourceService<Token>
 {
     private readonly TokenValidationParameters _tokenValidationParameters;
     private readonly IdentityOptions _identityOptions;

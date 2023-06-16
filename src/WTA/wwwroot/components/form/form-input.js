@@ -13,12 +13,17 @@ export default {
       </template>
     </template>
     <template v-else>
+      <template v-if="getInput(schema)==='select'">
+        <el-select v-model="model[prop]" :placeholder="$t('select')" :multiple="!!schema.multiple" clearable>
+          <el-option v-for="item in schema.options" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </template>
       <el-input
         :disabled="getDisabled()"
         :placeholder="schema.title"
         v-model="model[prop]"
         type="number"
-        v-if="schema.type==='number'"
+        v-else-if="schema.type==='number'"
       />
       <el-input-number
         :disabled="getDisabled()"
@@ -68,10 +73,14 @@ export default {
       }
       return false;
     };
+    const getInput = (schema) => {
+      return schema.input ?? schema.type;
+    };
     /*end*/
     return {
       model,
       getDisabled,
+      getInput,
       dayjs,
     };
   },
