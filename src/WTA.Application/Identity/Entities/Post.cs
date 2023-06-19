@@ -3,8 +3,10 @@ using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
 
-[Order(4)]
-public class Department : BaseTreeEntity<Department>
+[Order(5)]
+public class Post : BaseEntity
 {
+    public string Name { get; set; } = null!;
+    public string Number { get; set; } = null!;
     public List<User> Users { get; set; } = new List<User>();
 }

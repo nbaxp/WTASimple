@@ -103,5 +103,14 @@
   "IsExternal": "外链",
   "IsHidden": "隐藏",
   "Redirect": "跳转",
-  "Columns": "列"
+  "Columns": "列",
+  "IdentityModule": "系统管理",
+  "User": "用户",
+  "Role": "角色",
+  "Permission": "权限",
+  "Department": "部门",
+  "Post": "岗位",
+  "Dict": "字典",
+  "MonitorModule": "系统监控",
+  "JobItem": "定时任务"
 }

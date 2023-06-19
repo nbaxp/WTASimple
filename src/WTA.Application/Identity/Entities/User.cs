@@ -4,7 +4,7 @@ using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
 
-[Display(Name = "用户")]
+[Order(1)]
 public class User : BaseEntity
 {
     public string UserName { get; set; } = null!;
@@ -26,6 +26,10 @@ public class User : BaseEntity
 
     [Navigation]
     public Guid? DepartmentId { get; set; }
+    public Guid? PostId { get; set; }
+
     public Department? Department { get; set; }
+    public Post? Post { get; set; }
+
     public List<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

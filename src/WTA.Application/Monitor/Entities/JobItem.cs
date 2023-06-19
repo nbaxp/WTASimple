@@ -1,9 +1,7 @@
-using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Monitor.Entities;
 
-[Display(Name = "工作任务")]
 public class JobItem : BaseEntity
 {
     public string Name { get; set; } = null!;

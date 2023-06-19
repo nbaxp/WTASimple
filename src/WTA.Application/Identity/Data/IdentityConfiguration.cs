@@ -1,18 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using WTA.Application.Identity.Entities;
-using WTA.Shared.Attributes;
+using WTA.Application.Monitor.Entities;
 using WTA.Shared.Extensions;
 
 namespace WTA.Shared.Data.Config;
 
-[DbContext<IdentityDbContext>]
-public class IdentityConfiguration : IEntityTypeConfiguration<Tenant>,
+public class IdentityConfiguration : IDbConfig<IdentityDbContext>, IEntityTypeConfiguration<Tenant>,
     IEntityTypeConfiguration<ConnectionString>,
     IEntityTypeConfiguration<Department>,
     IEntityTypeConfiguration<User>,
      IEntityTypeConfiguration<Role>,
      IEntityTypeConfiguration<Permission>,
+     IEntityTypeConfiguration<Post>,
      IEntityTypeConfiguration<UserRole>,
      IEntityTypeConfiguration<RolePermission>,
      IEntityTypeConfiguration<JobItem>
@@ -34,14 +34,15 @@ public class IdentityConfiguration : IEntityTypeConfiguration<Tenant>,
 
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.HasIndex(o => o.UserName).IsUnique();
+        builder.HasOne(o => o.Post).WithMany(o => o.Users).HasForeignKey(o => o.PostId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(o => o.Department).WithMany(o => o.Users).HasForeignKey(o => o.DepartmentId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasAlternateKey(o => o.UserName);
         builder.HasIndex(o => o.NormalizedUserName).IsUnique();
     }
 
     public void Configure(EntityTypeBuilder<Role> builder)
     {
-        builder.HasIndex(o => o.Name).IsUnique();
-        builder.HasIndex(o => o.Number).IsUnique();
+        builder.HasAlternateKey(o => o.Number);
     }
 
     public void Configure(EntityTypeBuilder<Permission> builder)
@@ -68,5 +69,10 @@ public class IdentityConfiguration : IEntityTypeConfiguration<Tenant>,
 
     public void Configure(EntityTypeBuilder<JobItem> builder)
     {
+    }
+
+    public void Configure(EntityTypeBuilder<Post> builder)
+    {
+        builder.HasAlternateKey(o => o.Number);
     }
 }

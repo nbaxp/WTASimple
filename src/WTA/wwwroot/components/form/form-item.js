@@ -7,7 +7,7 @@ export default {
   template: html`
     <template v-if="showItem()">
       <template v-if="schema.type==='object'"></template>
-      <template v-else-if="schema.type==='array'"> {{schema}} </template>
+      <template v-else-if="schema.type==='array'"></template>
       <template v-else>
         <el-form-item
           :label="schema.title"

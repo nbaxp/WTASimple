@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities;
 
-[Display(Name = "角色")]
+[Order(2)]
 public class Role : BaseEntity
 {
     public string Name { get; set; } = null!;

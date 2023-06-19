@@ -1,13 +1,12 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Builder;
-using WTA.Application.Identity.Entities;
+using WTA.Application.Monitor.Entities;
 using WTA.Shared;
 using WTA.Shared.Attributes;
 using WTA.Shared.Module;
 
 namespace WTA.Application.Identity;
 
-[Display(Name = "系统管理"), Order(-2)]
+[Order(1)]
 [IgnoreMultiTenancy]
 public class IdentityModule : BaseModule
 {

@@ -58,11 +58,12 @@ public class WebApp
 {
     public string OSPlatformName = OperatingSystem.IsWindows() ? nameof(OSPlatform.Windows) : (OperatingSystem.IsLinux() ? nameof(OSPlatform.Linux) : nameof(OSPlatform.OSX));
     public string EntryAssemblyName { get; } = Assembly.GetEntryAssembly()!.GetName().Name!;
-    public static WebApp Current { get; private set; } = new WebApp();
+    public static WebApp Current { get; } = new WebApp();
     public List<Assembly> Assemblies { get; } = new List<Assembly>();
     public Dictionary<Type, Dictionary<Type, List<Type>>> ModuleTypes { get; } = new Dictionary<Type, Dictionary<Type, List<Type>>>();
     public Dictionary<Type, List<Type>> DbSeedTypes { get; } = new Dictionary<Type, List<Type>>();
     public Dictionary<Type, List<Type>> DbConfigTypes { get; } = new Dictionary<Type, List<Type>>();
+    public Dictionary<Type, List<Type>> DbContextTypes { get; } = new Dictionary<Type, List<Type>>();
     public IServiceProvider Services { get; private set; } = null!;
 
     public string Prefix { get; } = nameof(WTA);
@@ -73,34 +74,39 @@ public class WebApp
         var path = Path.GetDirectoryName(AppContext.BaseDirectory)!;
         Directory.GetFiles(path, $"{this.Prefix}.*.dll").ForEach(p =>
         {
-            // 载未加载的自定义程序集并统一存放
-            this.Assemblies.Add(AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(o => o.Location == p) ?? Assembly.LoadFrom(p));
+            // 加载未加载的自定义程序集并统一存放在 WebApp::Assemblies
+            this.Assemblies.Add(AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.Location == p) ?? Assembly.LoadFrom(p));
         });
-        // 存放数据初始化类型
-        this.DbSeedTypes = new Dictionary<Type, List<Type>>();
-        // 存放数据配置类型
-        this.DbConfigTypes = new Dictionary<Type, List<Type>>();
+        // 获取数据上下文类型
+        var dbContextTypes = this.Assemblies.SelectMany(o => o.GetTypes())
+            .Where(o => o.IsClass && !o.IsAbstract && o.GetBaseClasses().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(BaseDbContext<>)));
+        dbContextTypes.ForEach(dbContextType =>
+        {
+            var dbSeedTypes = this.Assemblies.SelectMany(o => o.GetTypes())
+            .Where(o => o.IsClass && !o.IsAbstract && o.GetInterfaces().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(IDbSeed<>) && b.GetGenericArguments()[0] == dbContextType))
+            .ToList();
+            this.DbSeedTypes.Add(dbContextType, dbSeedTypes);
+            var dbConfigTypes = this.Assemblies.SelectMany(o => o.GetTypes())
+            .Where(o => o.IsClass && !o.IsAbstract && o.GetInterfaces().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(IDbConfig<>) && b.GetGenericArguments()[0] == dbContextType))
+            .ToList();
+            this.DbConfigTypes.Add(dbContextType, dbConfigTypes);
+            // 获取实体类型
+            var entityTypes = dbConfigTypes.SelectMany(o => o.GetInterfaces()).Where(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>))
+            .Select(o => o.GenericTypeArguments.First())
+            .ToList();
+            var moduleDbContextTypes = new Dictionary<Type, List<Type>>();
+            this.DbContextTypes.Add(dbContextType, entityTypes);
+        });
         // 获取全部模块类型
         var moduleTypes = this.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(BaseModule)));
         moduleTypes.ForEach(mt =>
         {
-            // 获取数据上下文类型
-            var dbContextTypes = this.Assemblies.SelectMany(o => o.GetTypes())
-            .Where(o => o.IsClass && !o.IsAbstract && o.GetBaseClasses().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(BaseDbContext<>)))
-            .Where(o => (o.GetCustomAttributes().Any(a => a.GetType().IsGenericType && a.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>) && a.GetType().GenericTypeArguments.Any(p => p == mt))))
-            .ToList();
             var moduleDbContextTypes = new Dictionary<Type, List<Type>>();
-            dbContextTypes.ForEach(dt =>
+            dbContextTypes
+            .Where(o => o.GetCustomAttributes().Any(a => a.GetType().IsGenericType && a.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>) && a.GetType().GetGenericArguments()[0] == mt))
+            .ForEach(dt =>
             {
-                // 获取数据初始化类型
-                var seedTypes = this.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.GetInterfaces().Any(b => b.IsGenericType && b.GetGenericTypeDefinition() == typeof(IDbSeed<>) && b.GenericTypeArguments.Any(o => o == dt))).ToList();
-                this.DbSeedTypes.Add(dt, seedTypes);
-                // 获取数据配置类型
-                var configTypes = this.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && (o.GetCustomAttributes().Any(a => a.GetType().IsGenericType && a.GetType().GetGenericTypeDefinition() == typeof(DbContextAttribute<>) && a.GetType().GenericTypeArguments.Any(p => p == dt)))).ToList();
-                this.DbConfigTypes.Add(dt, configTypes);
-                // 获取实体类型
-                var entityTypes = configTypes.SelectMany(o => o.GetInterfaces()).Where(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)).Select(o => o.GenericTypeArguments.First()).ToList();
-                moduleDbContextTypes.Add(dt, entityTypes);
+                moduleDbContextTypes.Add(dt, this.DbContextTypes[dt]);
             });
             this.ModuleTypes.Add(mt, moduleDbContextTypes);
         });
