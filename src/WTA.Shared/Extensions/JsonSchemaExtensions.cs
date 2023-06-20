@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using Newtonsoft.Json.Schema.Generation;
 using WTA.Shared.Application;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
@@ -38,7 +37,6 @@ public static class JsonSchemaExtensions
         return new
         {
             Schema = modelType.GetMetadataForType(),
-            Schema2 = new JSchemaGenerator().Generate(modelType),
             Model = model
         };
     }

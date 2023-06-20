@@ -3,7 +3,6 @@ using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities.Tenants;
 
-[Display(Name = "租户")]
 [Tenants]
 public class Tenant : BaseEntity
 {

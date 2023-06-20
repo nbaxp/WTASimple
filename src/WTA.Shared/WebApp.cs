@@ -537,7 +537,7 @@ public class WebApp
 
     public virtual void AddDefaultServices(WebApplicationBuilder builder)
     {
-        AppDomain.CurrentDomain.GetAssemblies()
+        this.Assemblies
             .Where(o => o.FullName!.StartsWith(nameof(WTA)))
             .Where(o => o.GetTypes()
             .Any(o => o.GetCustomAttributes(typeof(ImplementAttribute<>)).Any()))

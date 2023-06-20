@@ -64,7 +64,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
             // 设置审计属性和租户
             if (item.Entity is BaseEntity entity)
             {
-                Debug.WriteLine($"{entity.Id},{entity.GetPropertyValue<BaseEntity,string>("Number")}");
+                Debug.WriteLine($"{entity.Id},{entity.GetPropertyValue<BaseEntity, string>("Number")}");
                 if (item.State == EntityState.Added)
                 {
                     entity.CreatedOn = now;

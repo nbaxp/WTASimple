@@ -87,6 +87,8 @@
   "ResetPassword": "重置密码",
   "UserCenter": "用户中心",
   "Avatar": "头像",
+  "Tenant": "租户",
+  "ConnectionString": "连接字符串",
   "TenantId": "租户",
   "Tenants": "多租户",
   "Identity": "认证中心",
@@ -112,6 +114,7 @@
   "Department": "部门",
   "Post": "岗位",
   "Dict": "字典",
+  "Monitor": "监控",
   "MonitorModule": "系统监控",
   "JobItem": "定时任务"
 }

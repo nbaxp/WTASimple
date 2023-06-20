@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,6 +16,21 @@ public static class StringExtensions
     {
         var hash = MD5.HashData(Encoding.UTF8.GetBytes(input));
         return new Guid(hash);
+    }
+
+    public static string[] ToValues(this string input)
+    {
+        return input?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+    }
+
+    public static int ToInt(this string value)
+    {
+        return int.Parse(value, CultureInfo.InvariantCulture);
+    }
+
+    public static long ToLong(this string value)
+    {
+        return long.Parse(value, CultureInfo.InvariantCulture);
     }
 
     public static string ToSlugify(this string input)

@@ -7,7 +7,6 @@ using WTA.Shared.Module;
 namespace WTA.Application.Identity;
 
 [Order(1)]
-[IgnoreMultiTenancy]
 public class IdentityModule : BaseModule
 {
     public override void Configure(WebApplication app)

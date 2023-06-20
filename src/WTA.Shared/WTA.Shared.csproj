@@ -23,6 +23,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="System.Linq.Dynamic.Core" />
+    <PackageReference Include="System.Management" />
     <PackageReference Include="ValueInjecter" />
   </ItemGroup>
 

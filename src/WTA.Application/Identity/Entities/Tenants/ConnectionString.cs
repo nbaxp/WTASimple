@@ -4,7 +4,6 @@ using WTA.Shared.Domain;
 
 namespace WTA.Application.Identity.Entities.Tenants;
 
-[Display(Name = "连接字符串")]
 [Tenants]
 public class ConnectionString : BaseEntity
 {

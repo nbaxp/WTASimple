@@ -87,9 +87,11 @@ const reset = (list, parentPath = null) => {
   return list.map((o) => {
     const item = {
       path: o.path,
-      component: () => import(`../views/${o.component ? o.component : "list"}.js`),
       meta: o.meta,
     };
+    if (o.type === "Resource") {
+      item.component = import(`../views/${o.component ? o.component : "list"}.js`);
+    }
     item.meta.path = `${parentPath === null ? "/" : parentPath + "/"}${item.path}`;
     if (o.type === "Resource") {
       if (o.children.length) {

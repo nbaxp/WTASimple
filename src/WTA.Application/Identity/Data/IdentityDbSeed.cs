@@ -141,6 +141,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                 Name = resourceType.GetDisplayName(),
                 Number = resourceType.Name,
                 Path = resourceType.Name.ToSlugify(),
+                Component = resourceType.GetCustomAttribute<ComponentAttribute>()?.Component,
                 IsHidden = resourceType.HasAttribute<HiddenAttribute>(),
                 Icon = resourceType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
                 Order = resourceType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
@@ -181,20 +182,16 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             {
                 var groupNumber = groupAttribute.GetType().Name;
                 var groupPermission = context.Set<Permission>().FirstOrDefault(o => o.Number == groupAttribute.GetType().Name);
-                if (groupPermission == null)
+                groupPermission ??= new Permission
                 {
-                    groupPermission = new Permission
-                    {
-                        Type = PermissionType.Group,
-                        Name = groupAttribute.GetType().GetDisplayName(),
-                        Number = groupNumber,
-                        Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
-                        IsHidden = groupAttribute.GetType().HasAttribute<HiddenAttribute>(),
-                        Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
-                        Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
-                    }.UpdateId();
-                    //context.Set<Permission>().Add(groupPermission);
-                }
+                    Type = PermissionType.Group,
+                    Name = groupAttribute.GetType().GetDisplayName(),
+                    Number = groupNumber,
+                    Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
+                    IsHidden = groupAttribute.GetType().HasAttribute<HiddenAttribute>(),
+                    Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
+                    Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
+                }.UpdateId();
                 groupPermission.Children.Add(resourcePermission);
                 var moduleType = groupAttribute.GetType().GetCustomAttributes()
                        .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
@@ -220,10 +217,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                 }
                 else
                 {
-                    if(!context.Set<Permission>().Any(o => o.Number == groupAttribute.GetType().Name))
-                    {
-                        context.Set<Permission>().Add(groupPermission.UpdatePath());
-                    }
+                    context.Set<Permission>().AddOrUpdate(groupPermission.UpdatePath());
                 }
             }
             else

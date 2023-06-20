@@ -4,7 +4,6 @@ using WTA.Shared.Module;
 namespace WTA.Application.Monitor;
 
 [Order(2)]
-[IgnoreMultiTenancy]
 public class MonitorModule : BaseModule
 {
 }

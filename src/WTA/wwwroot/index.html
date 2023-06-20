@@ -19,9 +19,11 @@
         "lodash":"./lib/lodash/lodash.esm.js",
         "vue": "./lib/vue/vue.esm-browser.js",
         "vue-router": "./lib/vue-router/vue-router.esm-browser.js",
-        "pinia": "./lib/pinia/pinia.esm-browser.js",
-        "linq": "./lib/linq/linq.min.js",
         "vue-i18n":"./lib/vue-i18n/vue-i18n.esm-browser.prod.js",
+        "pinia": "./lib/pinia/pinia.esm-browser.js",
+        "pubsub-js": "./lib/pubsub-js/pubsub.esm.js",
+        "linq": "./lib/linq/linq.min.js",
+        "@microsoft/signalr": "./lib/@microsoft/signalr/signalr.esm.js",
         "@vueuse/shared": "./lib/@vueuse/shared/index.mjs",
         "@vueuse/core": "./lib/@vueuse/core/index.mjs",
         "element-plus": "./lib/element-plus/index.full.min.mjs",
@@ -29,6 +31,7 @@
         "nprogress": "./lib/nprogress/nprogress.vite-esm.js",
         "echarts/core": "./lib/echarts/echarts.esm.min.js",
         "vue-echarts": "./lib/vue-echarts/index.esm.min.js",
+        "resize-detector": "./lib/resize-detector/index.js",
         "@vue-office/excel": "./lib/@vue-office/excel/vue-office-excel.mjs",
         "@vue/devtools-api": "./lib/@vue/devtools-api/shim.js",
         "vue-demi": "./lib/vue-demi/shim.js"
@@ -39,39 +42,6 @@
     window.process = { env: { NODE_ENV: 'production' } };
   </script>
   <script type="module" src="./main.js"></script>
-  <script src="./lib/pubsub-js/pubsub.min.js"></script>
-  <script src="./lib/@microsoft/signalr/signalr.min.js"></script>
-  <script>
-    let connectionId = null;
-    const connection = new signalR.HubConnectionBuilder().withUrl('./api/hub').build();
-    const connect = () => {
-      if (connection.state === signalR.HubConnectionState.Disconnected) {
-        connection
-          .start()
-          .then(function () {
-            console.log('signalr connected');
-          })
-          .catch(function (error) {
-            console.error(error);
-            setTimeout(connect, 5000);
-          });
-      }
-    };
-    connection.onclose(function () {
-      connect();
-    });
-    connection.on('connected', function (id) {
-      connectionId = id;
-    });
-    PubSub.subscribe('test', (method, data) => {
-      connection.send("ClientToServer", "test", "data from client", connectionId, null);
-      console.log(method, data);
-    });
-    connection.on('ServerToClient', function (results) {
-      PubSub.publish(results.command, results);
-    });
-    connect();
-  </script>
 </body>
 
 </html>
