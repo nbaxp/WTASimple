@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using WTA.Application.Identity.Entities;
+using WTA.Application.Identity.Entities.SystemManagement;
 using WTA.Shared.Controllers;
 using WTA.Shared.Data;
 

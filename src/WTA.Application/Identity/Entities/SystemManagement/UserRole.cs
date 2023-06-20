@@ -2,10 +2,11 @@ using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Identity.Entities.SystemManagement;
 
 [Hidden]
 [Display(Name = "用户角色")]
+[SystemManagement]
 public class UserRole : BaseEntity
 {
     public Guid UserId { get; set; }

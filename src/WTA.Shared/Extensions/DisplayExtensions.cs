@@ -12,7 +12,7 @@ public static class DisplayExtensions
     {
         var scope = WebApp.Current.Services?.CreateScope();
         var localizer = scope?.ServiceProvider.GetService<IStringLocalizer>();
-        var key = type.GetCustomAttribute<DisplayAttribute>()?.Name ?? type.Name;
+        var key = type.GetCustomAttribute<DisplayAttribute>()?.Name ?? (type.IsAssignableTo(typeof(Attribute)) ? type.Name.TrimEnd("Attribute") : type.Name);
         return localizer?.GetString(key, type.FullName!) ?? key;
     }
 

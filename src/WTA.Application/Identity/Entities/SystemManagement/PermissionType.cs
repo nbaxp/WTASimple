@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Identity.Entities.SystemManagement;
 
 public enum PermissionType
 {

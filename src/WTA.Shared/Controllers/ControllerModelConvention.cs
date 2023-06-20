@@ -1,4 +1,6 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using WTA.Shared.Attributes;
 using WTA.Shared.Extensions;
 
 namespace WTA.Shared.Controllers;
@@ -18,7 +20,14 @@ public class ControllerModelConvention : IControllerModelConvention
                     var entityType = genericControllerType.GetGenericArguments().FirstOrDefault();
                     if (entityType != null)
                     {
-                        controller.ApiExplorer.GroupName = WebApp.Current.ModuleTypes.Where(o => o.Value.Values.Any(o => o.Contains(entityType))).Select(o => o.Key).FirstOrDefault()?.Name ?? controller.ControllerType.Assembly.GetName().Name;
+                        var groupAttribute = entityType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
+                        var moduleType = groupAttribute?.GetType().GetCustomAttributes()
+                                   .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
+                                   .Select(o => o as ITypeAttribute).Select(o => o?.Type).FirstOrDefault();
+                        if (moduleType != null)
+                        {
+                            controller.ApiExplorer.GroupName = moduleType?.Name;
+                        }
                     }
                 }
             }

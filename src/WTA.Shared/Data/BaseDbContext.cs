@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using Autofac;
 using LinqToDB.EntityFrameworkCore;
@@ -63,6 +64,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
             // 设置审计属性和租户
             if (item.Entity is BaseEntity entity)
             {
+                Debug.WriteLine($"{entity.Id},{entity.GetPropertyValue<BaseEntity,string>("Number")}");
                 if (item.State == EntityState.Added)
                 {
                     entity.CreatedOn = now;
@@ -102,10 +104,8 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         //默认配置
-        WebApp.Current.ModuleTypes.Where(o => o.Value.ContainsKey(this.GetType()))
-            .Select(o => o.Value.GetValueOrDefault(this.GetType()))
-            .Where(o => o != null)
-        .ForEach(o => o!.ForEach(entityType =>
+        WebApp.Current.DbContextTypes.GetValueOrDefault(GetType())
+        ?.ForEach(entityType =>
         {
             var entityTypeBuilder = modelBuilder.Entity(entityType);
             //实体
@@ -175,7 +175,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                 //视图
                 entityTypeBuilder.HasNoKey().ToView($"{this._tablePrefix}{entityType.Name}");
             }
-        }));
+        });
 
         //自定义配置
         var applyEntityConfigurationMethod = typeof(ModelBuilder)

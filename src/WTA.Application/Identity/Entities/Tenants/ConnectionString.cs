@@ -2,9 +2,10 @@ using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Identity.Entities.Tenants;
 
 [Display(Name = "连接字符串")]
+[Tenants]
 public class ConnectionString : BaseEntity
 {
     public string Name { get; set; } = null!;

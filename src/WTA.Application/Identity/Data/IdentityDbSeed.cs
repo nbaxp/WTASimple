@@ -4,7 +4,8 @@ using LinqToDB.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
-using WTA.Application.Identity.Entities;
+using WTA.Application.Identity.Entities.SystemManagement;
+using WTA.Application.Identity.Entities.Tenants;
 using WTA.Shared;
 using WTA.Shared.Application;
 using WTA.Shared.Attributes;
@@ -67,7 +68,8 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                         }
                     }
                 }
-            }.UpdatePath());
+            }.UpdateId()
+            .UpdatePath());
 
         // 角色初始化
         var superRole = new Role
@@ -122,98 +124,205 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             Component = "home",
             Icon = "home",
             Order = -3,
-        }.UpdatePath());
+        }.UpdateId().UpdatePath());
 
-        WebApp.Current.ModuleTypes.ForEach(m =>
+        WebApp.Current.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(IResource))).ForEach(resourceType =>
         {
-            var moduleType = m.Key;
-            var modulePermission = new Permission
-            {
-                Type = PermissionType.Module,
-                Name = moduleType.GetDisplayName(),
-                Number = moduleType.Name,
-                Path = $"{moduleType.Name.TrimEnd("Module").ToSlugify()}",
-                IsHidden = moduleType.HasAttribute<HiddenAttribute>(),
-                Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
-                Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
-            };
-            m.Value.SelectMany(o => o.Value).ForEach(entityType =>
-            {
-                var columns = entityType.GetProperties()
+            // 获取列
+            var columns = resourceType.GetProperties()
                     //.Where(o => o.PropertyType.IsValueType || o.PropertyType == typeof(string))
                     .OrderBy(o => o.GetCustomAttribute<DisplayAttribute>()?.GetOrder())
                     .ToDictionary(o => o.Name, o => o.GetDisplayName());
-                var resourcePermission = new Permission
+            // 创建资源权限
+            var resourcePermission = new Permission
+            {
+                IsReadonly = true,
+                Type = PermissionType.Resource,
+                Name = resourceType.GetDisplayName(),
+                Number = resourceType.Name,
+                Path = resourceType.Name.ToSlugify(),
+                IsHidden = resourceType.HasAttribute<HiddenAttribute>(),
+                Icon = resourceType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
+                Order = resourceType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
+                Columns = columns
+            }.UpdateId();
+            // 创建按钮权限
+            var resourceServiceType = typeof(IResourceService<>).MakeGenericType(resourceType);
+            actionDescriptors
+            .Select(o => o as ControllerActionDescriptor)
+            .Where(o => o != null && o.ControllerTypeInfo.AsType().IsAssignableTo(resourceServiceType))
+            .ForEach(actionDescriptor =>
+            {
+                var operation = actionDescriptor?.ActionName!;
+                var methodInfo = actionDescriptor?.MethodInfo!;
+                var method = (methodInfo.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(HttpMethodAttribute)))
+                as HttpMethodAttribute)?.HttpMethods?.FirstOrDefault() ?? "POST";
+                if (method != "GET")
                 {
-                    IsReadonly = true,
-                    Type = PermissionType.Resource,
-                    Name = entityType.GetDisplayName(),
-                    Number = $"{modulePermission.Number}.{entityType.Name}",
-                    Path = $"{entityType.Name.ToSlugify()}",
-                    IsHidden = entityType.HasAttribute<HiddenAttribute>(),
-                    Icon = entityType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
-                    Order = entityType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
-                    Columns = columns
-                };
-
-                var groupAttribute = entityType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
-                if (groupAttribute != null)
-                {
-                    var groupNumber = groupAttribute.GetType().Name;
-                    var groupPermission = modulePermission.Children.FirstOrDefault(o => o.Number == groupNumber);
-                    if (groupPermission == null)
+                    resourcePermission.Children.Add(new Permission
                     {
-                        groupPermission = new Permission
+                        IsReadonly = true,
+                        Type = PermissionType.Operation,
+                        Name = methodInfo.GetDisplayName(),
+                        Number = $"{actionDescriptor?.ControllerName}.{operation}",
+                        Path = $"{operation.TrimEnd("Async").ToSlugify()}",
+                        IsHidden = methodInfo.GetCustomAttributes<HiddenAttribute>().Any(),
+                        Method = method,
+                        Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
+                        Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
+                        HtmlClass = methodInfo.GetCustomAttribute<HtmlClassAttribute>()?.Class ?? HtmlClassAttribute.Default,
+                        IsTop = methodInfo.GetCustomAttribute<MultipleAttribute>() != null
+                    }.UpdateId());
+                }
+            });
+            // 实体分组
+            var groupAttribute = resourceType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
+            if (groupAttribute != null)
+            {
+                var groupNumber = groupAttribute.GetType().Name;
+                var groupPermission = context.Set<Permission>().FirstOrDefault(o => o.Number == groupAttribute.GetType().Name);
+                if (groupPermission == null)
+                {
+                    groupPermission = new Permission
+                    {
+                        Type = PermissionType.Group,
+                        Name = groupAttribute.GetType().GetDisplayName(),
+                        Number = groupNumber,
+                        Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
+                        IsHidden = groupAttribute.GetType().HasAttribute<HiddenAttribute>(),
+                        Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
+                        Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
+                    }.UpdateId();
+                    //context.Set<Permission>().Add(groupPermission);
+                }
+                groupPermission.Children.Add(resourcePermission);
+                var moduleType = groupAttribute.GetType().GetCustomAttributes()
+                       .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
+                       .Select(o => o as ITypeAttribute).Select(o => o?.Type).FirstOrDefault();
+                if (moduleType != null)
+                {
+                    var modulePermission = context.Set<Permission>().FirstOrDefault(o => o.Number == moduleType.Name);
+                    if (modulePermission == null)
+                    {
+                        modulePermission = new Permission
                         {
-                            Type = PermissionType.Group,
-                            Name = groupAttribute.GetType().GetDisplayName(),
-                            Number = groupNumber,
-                            Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
-                            IsHidden = groupAttribute.GetType().HasAttribute<HiddenAttribute>(),
-                            Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
-                            Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
-                        };
-                        modulePermission.Children.Add(groupPermission);
+                            Type = PermissionType.Module,
+                            Name = moduleType.GetDisplayName(),
+                            Number = moduleType.Name,
+                            Path = moduleType.Name.TrimEnd("Module").ToSlugify(),
+                            IsHidden = moduleType.HasAttribute<HiddenAttribute>(),
+                            Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
+                            Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
+                        }.UpdateId();
+                        context.Set<Permission>().Add(modulePermission.UpdatePath());
                     }
-                    groupPermission.Children.Add(resourcePermission);
+                    modulePermission.Children.Add(groupPermission);
                 }
                 else
                 {
-                    modulePermission.Children.Add(resourcePermission);
-                }
-
-                var resourceServiceType = typeof(IResourceService<>).MakeGenericType(entityType);
-                actionDescriptors
-                .Select(o => o as ControllerActionDescriptor)
-                .Where(o => o != null && o.ControllerTypeInfo.AsType().IsAssignableTo(resourceServiceType))
-                .ForEach(actionDescriptor =>
-                {
-                    var operation = actionDescriptor?.ActionName!;
-                    var methodInfo = actionDescriptor?.MethodInfo!;
-                    var method = (methodInfo.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(HttpMethodAttribute)))
-                    as HttpMethodAttribute)?.HttpMethods?.FirstOrDefault() ?? "POST";
-                    if (method != "GET")
+                    if(!context.Set<Permission>().Any(o => o.Number == groupAttribute.GetType().Name))
                     {
-                        resourcePermission.Children.Add(new Permission
-                        {
-                            IsReadonly = true,
-                            Type = PermissionType.Operation,
-                            Name = methodInfo.GetDisplayName(),
-                            Number = $"{actionDescriptor?.ControllerName}.{operation}",
-                            Path = $"{operation.TrimEnd("Async").ToSlugify()}",
-                            IsHidden = methodInfo.GetCustomAttributes<HiddenAttribute>().Any(),
-                            Method = method,
-                            Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
-                            Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
-                            HtmlClass = methodInfo.GetCustomAttribute<HtmlClassAttribute>()?.Class ?? HtmlClassAttribute.Default,
-                            IsTop = methodInfo.GetCustomAttribute<MultipleAttribute>() != null
-                        }); ;
+                        context.Set<Permission>().Add(groupPermission.UpdatePath());
                     }
-                });
-            });
-            modulePermission.UpdatePath();
-            context.Set<Permission>().Add(modulePermission);
+                }
+            }
+            else
+            {
+                context.Set<Permission>().Add(resourcePermission.UpdatePath());
+            }
             context.SaveChanges();
         });
+
+        //WebApp.Current.ModuleTypes.ForEach(m =>
+        //{
+        //    var moduleType = m.Key;
+        //    var modulePermission = new Permission
+        //    {
+        //        Type = PermissionType.Module,
+        //        Name = moduleType.GetDisplayName(),
+        //        Number = moduleType.Name,
+        //        Path = $"{moduleType.Name.TrimEnd("Module").ToSlugify()}",
+        //        IsHidden = moduleType.HasAttribute<HiddenAttribute>(),
+        //        Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
+        //        Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
+        //    };
+        //    m.Value.SelectMany(o => o.Value).ForEach(entityType =>
+        //    {
+        //        var columns = entityType.GetProperties()
+        //            //.Where(o => o.PropertyType.IsValueType || o.PropertyType == typeof(string))
+        //            .OrderBy(o => o.GetCustomAttribute<DisplayAttribute>()?.GetOrder())
+        //            .ToDictionary(o => o.Name, o => o.GetDisplayName());
+        //        var resourcePermission = new Permission
+        //        {
+        //            IsReadonly = true,
+        //            Type = PermissionType.Resource,
+        //            Name = entityType.GetDisplayName(),
+        //            Number = $"{modulePermission.Number}.{entityType.Name}",
+        //            Path = $"{entityType.Name.ToSlugify()}",
+        //            IsHidden = entityType.HasAttribute<HiddenAttribute>(),
+        //            Icon = entityType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
+        //            Order = entityType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
+        //            Columns = columns
+        //        };
+
+        //        var groupAttribute = entityType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
+        //        if (groupAttribute != null)
+        //        {
+        //            var groupNumber = groupAttribute.GetType().Name;
+        //            var groupPermission = modulePermission.Children.FirstOrDefault(o => o.Number == groupNumber);
+        //            if (groupPermission == null)
+        //            {
+        //                groupPermission = new Permission
+        //                {
+        //                    Type = PermissionType.Group,
+        //                    Name = groupAttribute.GetType().GetDisplayName(),
+        //                    Number = groupNumber,
+        //                    Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
+        //                    IsHidden = groupAttribute.GetType().HasAttribute<HiddenAttribute>(),
+        //                    Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
+        //                    Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
+        //                };
+        //                modulePermission.Children.Add(groupPermission);
+        //            }
+        //            groupPermission.Children.Add(resourcePermission);
+        //        }
+        //        else
+        //        {
+        //            modulePermission.Children.Add(resourcePermission);
+        //        }
+
+        //        var resourceServiceType = typeof(IResourceService<>).MakeGenericType(entityType);
+        //        actionDescriptors
+        //        .Select(o => o as ControllerActionDescriptor)
+        //        .Where(o => o != null && o.ControllerTypeInfo.AsType().IsAssignableTo(resourceServiceType))
+        //        .ForEach(actionDescriptor =>
+        //        {
+        //            var operation = actionDescriptor?.ActionName!;
+        //            var methodInfo = actionDescriptor?.MethodInfo!;
+        //            var method = (methodInfo.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(HttpMethodAttribute)))
+        //            as HttpMethodAttribute)?.HttpMethods?.FirstOrDefault() ?? "POST";
+        //            if (method != "GET")
+        //            {
+        //                resourcePermission.Children.Add(new Permission
+        //                {
+        //                    IsReadonly = true,
+        //                    Type = PermissionType.Operation,
+        //                    Name = methodInfo.GetDisplayName(),
+        //                    Number = $"{actionDescriptor?.ControllerName}.{operation}",
+        //                    Path = $"{operation.TrimEnd("Async").ToSlugify()}",
+        //                    IsHidden = methodInfo.GetCustomAttributes<HiddenAttribute>().Any(),
+        //                    Method = method,
+        //                    Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
+        //                    Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
+        //                    HtmlClass = methodInfo.GetCustomAttribute<HtmlClassAttribute>()?.Class ?? HtmlClassAttribute.Default,
+        //                    IsTop = methodInfo.GetCustomAttribute<MultipleAttribute>() != null
+        //                }); ;
+        //            }
+        //        });
+        //    });
+        //    modulePermission.UpdatePath();
+        //    context.Set<Permission>().Add(modulePermission);
+        //    context.SaveChanges();
+        //});
     }
 }

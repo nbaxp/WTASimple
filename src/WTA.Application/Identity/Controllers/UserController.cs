@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using WTA.Application.Identity.Entities;
+using WTA.Application.Identity.Entities.SystemManagement;
 using WTA.Shared.Attributes;
 using WTA.Shared.Authentication;
 using WTA.Shared.Controllers;

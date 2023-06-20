@@ -88,6 +88,7 @@
   "UserCenter": "用户中心",
   "Avatar": "头像",
   "TenantId": "租户",
+  "Tenants": "多租户",
   "Identity": "认证中心",
   "SystemManagement": "系统管理",
   "RoleId": "角色",

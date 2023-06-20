@@ -63,7 +63,7 @@ const logout = () => {
 };
 
 const getUser = async () => {
-  const result = await post("identity/user/info");
+  const result = await post("system-management/user/info");
   const user = result.data;
   user.roles = Enumerable.from(user.userRoles)
     .select((o) => o.role)

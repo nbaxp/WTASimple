@@ -15,15 +15,19 @@ public class GenericControllerRouteConvention : IControllerModelConvention
         var baseControllerType = controller.ControllerType.GetBaseClasses().Concat(new Type[] { controller.ControllerType }).FirstOrDefault(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(GenericController<,,,,,>));
         if (baseControllerType != null)
         {
+            var routeTemplate = $"api/{{culture=zh}}/";
             var genericType = baseControllerType.GenericTypeArguments[0];
-            var moduleTypeName = WebApp.Current.ModuleTypes.FirstOrDefault(o => o.Value.Values.Any(o => o.Contains(genericType))).Key.Name.TrimEnd("Module");
-            var groupTypeName = (genericType.GetCustomAttributes().FirstOrDefault(a => a.GetType().IsAssignableTo(typeof(GroupAttribute))))?
-                .GetType().Name.TrimEnd("Attribute");
-
-            var routeTemplate = $"api/{{culture=zh}}/{moduleTypeName?.ToSlugify()}/";
-            if (groupTypeName != null)
+            var groupAttribute = genericType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
+            var moduleAttribute = groupAttribute?.GetType().GetCustomAttributes()
+                       .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
+                       .Select(o => o as ITypeAttribute).Select(o => o?.Type).FirstOrDefault();
+            if (moduleAttribute != null)
             {
-                routeTemplate += $"{groupTypeName?.ToSlugify()}/";
+                routeTemplate += $"{moduleAttribute.Name.TrimEnd("Module").ToSlugify()}/";
+            }
+            if (groupAttribute != null)
+            {
+                routeTemplate += $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}/";
             }
             routeTemplate += "[controller]/[action]";
             controller.Selectors.Add(new SelectorModel

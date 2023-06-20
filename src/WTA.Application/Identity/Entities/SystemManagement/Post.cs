@@ -1,9 +1,10 @@
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Identity.Entities.SystemManagement;
 
 [Order(5)]
+[SystemManagement]
 public class Post : BaseEntity
 {
     public string Name { get; set; } = null!;

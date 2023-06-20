@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Builder;
-using WTA.Application.Monitor.Entities;
+using WTA.Application.Identity.Entities.SystemManagement;
 using WTA.Shared;
 using WTA.Shared.Attributes;
 using WTA.Shared.Module;

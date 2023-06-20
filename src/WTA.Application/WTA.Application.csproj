@@ -4,4 +4,8 @@
     <ProjectReference Include="..\WTA.Shared\WTA.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Monitor\Entities\" />
+  </ItemGroup>
+
 </Project>

@@ -2,9 +2,10 @@ using System.ComponentModel.DataAnnotations;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Identity.Entities.SystemManagement;
 
 [Order(3)]
+[SystemManagement]
 public class Permission : BaseTreeEntity<Permission>
 {
     [Required]

@@ -10,7 +10,7 @@ public class EfRepository<TEntity> : IRepository<TEntity> where TEntity : BaseEn
 
     public EfRepository(IServiceProvider serviceProvider)
     {
-        var dbContextType = WebApp.Current.ModuleTypes.SelectMany(o => o.Value).FirstOrDefault(o => o.Value.Contains(typeof(TEntity))).Key;
+        var dbContextType = WebApp.Current.DbContextTypes.FirstOrDefault(o => o.Value.Contains(typeof(TEntity))).Key;
         var scope = serviceProvider.CreateScope();
         this._dbContext = (scope.ServiceProvider.GetRequiredService(dbContextType!) as DbContext)!;
     }

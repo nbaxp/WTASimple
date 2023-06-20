@@ -60,7 +60,7 @@ public class WebApp
     public string EntryAssemblyName { get; } = Assembly.GetEntryAssembly()!.GetName().Name!;
     public static WebApp Current { get; } = new WebApp();
     public List<Assembly> Assemblies { get; } = new List<Assembly>();
-    public Dictionary<Type, Dictionary<Type, List<Type>>> ModuleTypes { get; } = new Dictionary<Type, Dictionary<Type, List<Type>>>();
+    public List<Type> ModuleTypes { get; } = new List<Type>();
     public Dictionary<Type, List<Type>> DbSeedTypes { get; } = new Dictionary<Type, List<Type>>();
     public Dictionary<Type, List<Type>> DbConfigTypes { get; } = new Dictionary<Type, List<Type>>();
     public Dictionary<Type, List<Type>> DbContextTypes { get; } = new Dictionary<Type, List<Type>>();
@@ -98,18 +98,18 @@ public class WebApp
             this.DbContextTypes.Add(dbContextType, entityTypes);
         });
         // 获取全部模块类型
-        var moduleTypes = this.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(BaseModule)));
-        moduleTypes.ForEach(mt =>
-        {
-            var moduleDbContextTypes = new Dictionary<Type, List<Type>>();
-            dbContextTypes
-            .Where(o => o.GetCustomAttributes().Any(a => a.GetType().IsGenericType && a.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>) && a.GetType().GetGenericArguments()[0] == mt))
-            .ForEach(dt =>
-            {
-                moduleDbContextTypes.Add(dt, this.DbContextTypes[dt]);
-            });
-            this.ModuleTypes.Add(mt, moduleDbContextTypes);
-        });
+        this.ModuleTypes = this.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(BaseModule))).ToList();
+        //moduleTypes.ForEach(mt =>
+        //{
+        //    var moduleDbContextTypes = new Dictionary<Type, List<Type>>();
+        //    dbContextTypes
+        //    .Where(o => o.GetCustomAttributes().Any(a => a.GetType().IsGenericType && a.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>) && a.GetType().GetGenericArguments()[0] == mt))
+        //    .ForEach(dt =>
+        //    {
+        //        moduleDbContextTypes.Add(dt, this.DbContextTypes[dt]);
+        //    });
+        //    this.ModuleTypes.Add(mt, moduleDbContextTypes);
+        //});
     }
 
     public virtual void Start(string[] args, Action<WebApplicationBuilder>? configureBuilder = null, Action<WebApplication>? configureApplication = null)
@@ -123,7 +123,7 @@ public class WebApp
         {
             Log.Logger.Information($"{this.EntryAssemblyName} Start");
             // 实例化模块
-            var modules = this.ModuleTypes.Keys.Select(o => Activator.CreateInstance(o) as BaseModule).Where(o => o != null).ToList();
+            var modules = this.ModuleTypes.Select(o => Activator.CreateInstance(o) as BaseModule).Where(o => o != null).ToList();
             // 创建 WebApplicationBuilder
             var builder = WebApplication.CreateBuilder(args);
             // 默认配置
@@ -610,39 +610,36 @@ public class WebApp
             .GetMethods()
             .FirstOrDefault(o => o.Name == nameof(EntityFrameworkServiceCollectionExtensions.AddDbContext) &&
             o.GetParameters().Select(x => x.ParameterType).SequenceEqual(parameterTypes));
-        this.ModuleTypes.ForEach(module =>
+        this.DbContextTypes.Keys.ForEach(dbContextType =>
         {
-            module.Value.Keys.ForEach(dbContextType =>
+            Action<DbContextOptionsBuilder> action = optionsBuilder =>
             {
-                Action<DbContextOptionsBuilder> action = optionsBuilder =>
+                var connectionStringName = dbContextType.Name.TrimEnd("DbContext");
+                var connectionString = builder.Configuration.GetConnectionString(connectionStringName);
+                if (!dbContextType.CustomAttributes.Any(o => o.AttributeType == typeof(IgnoreMultiTenancyAttribute)))
                 {
-                    var connectionStringName = dbContextType.Name.TrimEnd("DbContext");
-                    var connectionString = builder.Configuration.GetConnectionString(connectionStringName);
-                    if (!dbContextType.CustomAttributes.Any(o => o.AttributeType == typeof(IgnoreMultiTenancyAttribute)))
+                    var tenantService = this.Services.GetService<ITenantService>();
+                    if (tenantService != null)
                     {
-                        var tenantService = this.Services.GetService<ITenantService>();
-                        if (tenantService != null)
+                        var tenantId = tenantService?.GetTenantId();
+                        if (tenantId != null)
                         {
-                            var tenantId = tenantService?.GetTenantId();
-                            if (tenantId != null)
+                            connectionString = tenantService?.GetConnectionString(connectionStringName);
+                            if (string.IsNullOrEmpty(connectionString))
                             {
-                                connectionString = tenantService?.GetConnectionString(connectionStringName);
-                                if (string.IsNullOrEmpty(connectionString))
-                                {
-                                    throw new Exception("租户不存在");
-                                }
+                                throw new Exception("租户不存在");
                             }
                         }
                     }
-                    optionsBuilder.UseSqlite(connectionString);
-                };
-                method?.MakeGenericMethod(dbContextType).Invoke(null, new object[] { builder.Services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
-                var dbSeedType = typeof(IDbSeed<>).MakeGenericType(dbContextType);
-                if (this.DbSeedTypes.TryGetValue(dbContextType, out var seedTypes))
-                {
-                    seedTypes.ForEach(o => builder.Services.AddTransient(dbSeedType, o));
                 }
-            });
+                optionsBuilder.UseSqlite(connectionString);
+            };
+            method?.MakeGenericMethod(dbContextType).Invoke(null, new object[] { builder.Services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
+            var dbSeedType = typeof(IDbSeed<>).MakeGenericType(dbContextType);
+            if (this.DbSeedTypes.TryGetValue(dbContextType, out var seedTypes))
+            {
+                seedTypes.ForEach(o => builder.Services.AddTransient(dbSeedType, o));
+            }
         });
         builder.Services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
     }

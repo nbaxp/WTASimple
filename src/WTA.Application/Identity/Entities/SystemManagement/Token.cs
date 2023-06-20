@@ -1,9 +1,9 @@
 using WTA.Shared.Application;
 using WTA.Shared.Attributes;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Identity.Entities.SystemManagement;
 
-[Group()]
+[SystemManagement, Hidden]
 public class Token : IResource
 {
 }

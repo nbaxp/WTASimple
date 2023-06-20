@@ -1,9 +1,10 @@
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Identity.Entities;
+namespace WTA.Application.Identity.Entities.SystemManagement;
 
 [Order(2)]
+[SystemManagement]
 public class Role : BaseEntity
 {
     public string Name { get; set; } = null!;

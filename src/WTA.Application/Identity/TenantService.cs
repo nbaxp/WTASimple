@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using WTA.Application.Identity.Entities;
+using WTA.Application.Identity.Entities.Tenants;
 using WTA.Shared.Attributes;
 using WTA.Shared.Data;
 using WTA.Shared.Tenants;

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WTA.Application.Identity.Entities;
-using WTA.Application.Monitor.Entities;
+using WTA.Application.Identity.Entities.SystemManagement;
+using WTA.Application.Identity.Entities.Tenants;
 using WTA.Shared.Extensions;
 
 namespace WTA.Shared.Data.Config;
