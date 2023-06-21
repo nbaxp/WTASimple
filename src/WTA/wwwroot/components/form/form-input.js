@@ -14,7 +14,13 @@ export default {
     </template>
     <template v-else>
       <template v-if="getInput(schema)==='select'">
-        <el-select v-model="model[prop]" :placeholder="$t('select')" :multiple="!!schema.multiple" clearable>
+        <el-select
+          v-model="model[prop]"
+          :placeholder="$t('select')"
+          :multiple="!!schema.multiple"
+          clearable
+          style="width:100%"
+        >
           <el-option v-for="item in schema.options" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </template>

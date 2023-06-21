@@ -19,6 +19,9 @@
     <PackageReference Include="Serilog.Settings.Configuration" />
     <PackageReference Include="Serilog.Sinks.Async" />
     <PackageReference Include="Serilog.Sinks.Http" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />

@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using WTA.Shared.Application;
 
 namespace WTA.Shared.Monitor;
 

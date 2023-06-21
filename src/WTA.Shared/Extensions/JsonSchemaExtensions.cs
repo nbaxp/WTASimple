@@ -130,7 +130,7 @@ public static class JsonSchemaExtensions
 
         schema.AddNotNull("description", meta.Description);
         schema.AddNotNull("format", meta.DataTypeName?.ToLowerCamelCase());
-        schema.AddNotNull("control", meta.TemplateHint?.ToLowerCamelCase());
+        schema.AddNotNull("input", meta.TemplateHint?.ToLowerCamelCase());
 
         if (meta is DefaultModelMetadata defaultModelMetadata)
         {

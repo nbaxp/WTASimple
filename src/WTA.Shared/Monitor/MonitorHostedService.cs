@@ -12,7 +12,7 @@ namespace WTA.Shared.Monitor;
 public class MonitorHostedService : IHostedService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public MonitorHostedService(IServiceProvider applicationServices)
     {
@@ -23,7 +23,7 @@ public class MonitorHostedService : IHostedService
     {
         Task.Run(async () =>
         {
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            while (!this._cancellationTokenSource.Token.IsCancellationRequested)
             {
                 try
                 {
@@ -48,7 +48,7 @@ public class MonitorHostedService : IHostedService
 
     private void DoWork()
     {
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = this._serviceProvider.CreateScope();
         //if (scope.ServiceProvider.GetRequiredService<IConfiguration>().GetValue("EnableMonitor", false))
         {
             var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<PageHub>>();

@@ -22,7 +22,6 @@ public class User : BaseEntity
     public string PasswordHash { get; set; } = null!;
 
     public int AccessFailedCount { get; set; }
-    public bool LockoutEnabled { get; set; }
     public DateTime? LockoutEnd { get; set; }
 
     [Navigation]

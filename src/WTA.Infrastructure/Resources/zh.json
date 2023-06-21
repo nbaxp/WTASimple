@@ -116,5 +116,8 @@
   "Dict": "字典",
   "Monitor": "监控",
   "MonitorModule": "系统监控",
-  "JobItem": "定时任务"
+  "JobItem": "定时任务",
+  "Captcha": "验证码",
+  "CaptchaExpired": "验证码已过期",
+  "CaptchaError": "验证码错误"
 }
