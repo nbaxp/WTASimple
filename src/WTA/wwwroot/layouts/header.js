@@ -11,7 +11,7 @@ import LayoutLocale from "./locale.js";
 export default {
   components: { SvgIcon, LayoutLogo, LayoutLocale, ElMessage, ElMessageBox },
   template: html`
-    <div class="flex-justify">
+    <div class="flex items-center justify-between">
       <div class="flex">
         <layout-logo />
         <el-icon @click="toggleMenuCollapse" class="cursor-pointer">

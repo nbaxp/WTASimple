@@ -10,9 +10,9 @@ import LayoutFooter from "../layouts/footer.js";
 export default {
   components: { AppForm, LayoutLogo, LayoutLocale, LayoutFooter },
   template: html`<el-container>
-    <el-main style="display:flex;align-items: center;justify-content: center;">
+    <el-main class="flex justify-center">
       <div>
-        <div class="flex">
+        <div class="flex items-center justify-center">
           <layout-logo />
           <layout-locale />
         </div>
@@ -28,10 +28,10 @@ export default {
     const schema = reactive(vm.schema);
     const model = reactive(vm.model ?? schemaToModel(schema));
     const action = ref("token/create");
-    const submit = async () => {
+    const submit = async (callback) => {
       const result = await login(action.value, model);
       if (result.errors) {
-        model.errors = result.errors;
+        callback(result.errors);
       }
     };
     return {

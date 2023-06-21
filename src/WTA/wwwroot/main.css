@@ -4,5 +4,5 @@
 @import url("./lib/github-markdown-css/github-markdown.min.css");
 @import url("./lib/highlightjs/highlight.css");
 @import url("./lib/@vue-office/excel/index.css");
-@import url("./styles/class.css");
+@import url("./lib/tailwindcss/tailwind.min.css");
 @import url("./styles/site.css");

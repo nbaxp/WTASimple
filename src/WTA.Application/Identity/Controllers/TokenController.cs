@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -65,76 +66,85 @@ public class TokenController : BaseController, IResourceService<Token>
                 var additionalClaims = new List<Claim>();
                 if (model.TenantId != null)
                 {
-                    var tenantQuery = this._tenantRepository.AsNoTracking();
-                    var tenant = tenantQuery.FirstOrDefault(o => o.Id == model.TenantId) ?? throw new Exception("租户不存在");
-                    additionalClaims.Add(new Claim(nameof(model.TenantId), model.TenantId!.ToString()));
-                }
-                //
-                var userQuery = this._userRepository.Queryable();
-                var user = userQuery.FirstOrDefault(o => o.UserName == model.UserName);
-                if (!this._identityOptions.SupportsUserLockout)
-                {//未启用登录锁定
-                    if (user == null || user.PasswordHash != this._passwordHasher.HashPassword(model.Password, user.SecurityStamp!))
+                    if (this._tenantRepository.AsNoTracking().Any(o => o.Id == model.TenantId))
                     {
-                        ModelState.AddModelError("", "用户名或密码错误");
-                    }
-                }
-                else
-                {//启用登录锁定
-                    if (user != null)
-                    {
-                        if (user.LockoutEnd.HasValue)
-                        {//已锁定
-                            if (DateTime.Now > user.LockoutEnd.Value)
-                            {//超时则解锁
-                                user.AccessFailedCount = 0;
-                                user.LockoutEnd = null;
-                                this._userRepository.SaveChanges();
-                            }
-                            else
-                            {//未超时禁止登录
-                                ModelState.AddModelError("", $"用户已锁定,{(user.LockoutEnd!.Value - DateTime.Now).TotalMinutes} 分钟后解除");
-                            }
-                        }
-                        if (!user.LockoutEnd.HasValue)
-                        {//未锁定
-                            if (user.PasswordHash != this._passwordHasher.HashPassword(model.Password, user.SecurityStamp!))
-                            {//密码不正确
-                                user.AccessFailedCount++;
-                                if (user.AccessFailedCount >= this._identityOptions.MaxFailedAccessAttempts)
-                                {//超过次数则锁定
-                                    user.LockoutEnd = DateTime.Now + this._identityOptions.DefaultLockoutTimeSpan;
-                                    ModelState.AddModelError("", $"用户已锁定,{(user.LockoutEnd!.Value - DateTime.Now).TotalMinutes} 分钟后解除");
-                                }
-                                else
-                                {//未超过次数提示剩余次数
-                                    ModelState.AddModelError(nameof(LoginRequestModel.Password), $"密码错误,{this._identityOptions.MaxFailedAccessAttempts - user.AccessFailedCount}次失败后将锁定用户");
-                                }
-                                this._userRepository.SaveChanges();
-                            }
-                        }
+                        additionalClaims.Add(new Claim(nameof(model.TenantId), model.TenantId?.ToString()!));
                     }
                     else
-                    {
-                        ModelState.AddModelError(nameof(LoginRequestModel.UserName), "用户不存在");
+                    {//租户不存在
+                        ModelState.AddModelError(nameof(LoginRequestModel.TenantId), "租户不存在");
                     }
                 }
                 if (ModelState.IsValid)
-                {//验证成功
-                    var roles = this._userRepository.AsNoTracking()
-                    .Where(o => o.UserName == model.UserName)
-                    .SelectMany(o => o.UserRoles)
-                    .Select(o => o.Role.Name)
-                    .ToList()
-                    .Select(o => new Claim(this._tokenValidationParameters.RoleClaimType, o));
-                    additionalClaims.AddRange(roles);
-                    var subject = CreateSubject(model.UserName, additionalClaims);
-                    return Json(new LoginResponseModel
-                    {
-                        AccessToken = CreateToken(subject, this._identityOptions.AccessTokenExpires),
-                        RefreshToken = CreateToken(subject, model.RememberMe ? TimeSpan.FromDays(365) : this._identityOptions.RefreshTokenExpires),
-                        ExpiresIn = (long)this._identityOptions.AccessTokenExpires.TotalSeconds
-                    });
+                {
+                    var userQuery = this._userRepository.Queryable();
+                    var user = userQuery.FirstOrDefault(o => o.UserName == model.UserName);
+                    if (!this._identityOptions.SupportsUserLockout)
+                    {//未启用登录锁定
+                        if (user == null || user.PasswordHash != this._passwordHasher.HashPassword(model.Password, user.SecurityStamp!))
+                        {
+                            ModelState.AddModelError("", "用户名或密码错误");
+                        }
+                    }
+                    else
+                    {//启用登录锁定
+                        if (user != null)
+                        {
+                            if (user.LockoutEnd.HasValue)
+                            {//已锁定
+                                if (DateTime.UtcNow > user.LockoutEnd.Value)
+                                {//超时则解锁
+                                    user.AccessFailedCount = 0;
+                                    user.LockoutEnd = null;
+                                    this._userRepository.SaveChanges();
+                                }
+                                else
+                                {//未超时禁止登录
+                                    var minutes = (user.LockoutEnd!.Value - DateTime.UtcNow).TotalMinutes.ToString("f0", CultureInfo.InvariantCulture);
+                                    ModelState.AddModelError(nameof(LoginRequestModel.UserName), $"用户已锁定,{minutes} 分钟后解除锁定");
+                                }
+                            }
+                            if (!user.LockoutEnd.HasValue)
+                            {//未锁定
+                                if (user.PasswordHash != this._passwordHasher.HashPassword(model.Password, user.SecurityStamp!))
+                                {//密码不正确
+                                    user.AccessFailedCount++;
+                                    if (user.AccessFailedCount >= this._identityOptions.MaxFailedAccessAttempts)
+                                    {//超过次数则锁定
+                                        user.LockoutEnd = DateTime.UtcNow + this._identityOptions.DefaultLockoutTimeSpan;
+                                        var minutes = (user.LockoutEnd!.Value - DateTime.UtcNow).TotalMinutes.ToString("f0", CultureInfo.InvariantCulture);
+                                        ModelState.AddModelError(nameof(LoginRequestModel.UserName), $"用户已锁定,{minutes} 分钟后解除锁定");
+                                    }
+                                    else
+                                    {//未超过次数提示剩余次数
+                                        ModelState.AddModelError(nameof(LoginRequestModel.Password), $"密码错误,{this._identityOptions.MaxFailedAccessAttempts - user.AccessFailedCount}次失败后将锁定用户");
+                                    }
+                                    this._userRepository.SaveChanges();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ModelState.AddModelError(nameof(LoginRequestModel.UserName), "用户不存在");
+                        }
+                    }
+                    if (ModelState.IsValid)
+                    {//验证成功
+                        var roles = this._userRepository.AsNoTracking()
+                        .Where(o => o.UserName == model.UserName)
+                        .SelectMany(o => o.UserRoles)
+                        .Select(o => o.Role.Name)
+                        .ToList()
+                        .Select(o => new Claim(this._tokenValidationParameters.RoleClaimType, o));
+                        additionalClaims.AddRange(roles);
+                        var subject = CreateSubject(model.UserName, additionalClaims);
+                        return Json(new LoginResponseModel
+                        {
+                            AccessToken = CreateToken(subject, this._identityOptions.AccessTokenExpires),
+                            RefreshToken = CreateToken(subject, model.RememberMe ? TimeSpan.FromDays(365) : this._identityOptions.RefreshTokenExpires),
+                            ExpiresIn = (long)this._identityOptions.AccessTokenExpires.TotalSeconds
+                        });
+                    }
                 }
             }
             catch (Exception ex)

@@ -34,7 +34,7 @@ export default {
     const formRef = ref(null);
     const loading = ref(false);
     //
-    const errors = reactive({});
+    const errors = ref({});
     // reset
     const reset = () => {
       formRef.value.resetFields();
@@ -49,7 +49,11 @@ export default {
         //const valid = await validate();
         //if (valid) {
         loading.value = true;
-        context.emit("submit");
+        context.emit("submit", (serverErrors) => {
+          if (serverErrors) {
+            errors.value = serverErrors;
+          }
+        });
         //}
       } catch (error) {
         console.error(error);

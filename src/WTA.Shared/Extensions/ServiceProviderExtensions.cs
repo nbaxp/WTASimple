@@ -44,7 +44,7 @@ public static class ServiceProviderExtensions
                     Console.WriteLine($"{contextName} 初始化开始");
                     Console.WriteLine($"ConnectionString:{context.Database.GetConnectionString()}");
                     // 查询当前DbContext是否已经初始化
-                    var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                    var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                     var connection = context.Database.GetDbConnection();
                     var command = connection.CreateCommand();
                     command.Transaction = transaction.GetDbTransaction();
