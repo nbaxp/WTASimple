@@ -72,10 +72,10 @@ public class TokenController : BaseController, IResourceService<Token>
                     }
                     else
                     {//租户不存在
-                        ModelState.AddModelError(nameof(LoginRequestModel.TenantId), "租户不存在");
+                        this.ModelState.AddModelError(nameof(LoginRequestModel.TenantId), "租户不存在");
                     }
                 }
-                if (ModelState.IsValid)
+                if (this.ModelState.IsValid)
                 {
                     var userQuery = this._userRepository.Queryable();
                     var user = userQuery.FirstOrDefault(o => o.UserName == model.UserName);
@@ -83,7 +83,7 @@ public class TokenController : BaseController, IResourceService<Token>
                     {//未启用登录锁定
                         if (user == null || user.PasswordHash != this._passwordHasher.HashPassword(model.Password, user.SecurityStamp!))
                         {
-                            ModelState.AddModelError("", "用户名或密码错误");
+                            this.ModelState.AddModelError("", "用户名或密码错误");
                         }
                     }
                     else
@@ -101,7 +101,7 @@ public class TokenController : BaseController, IResourceService<Token>
                                 else
                                 {//未超时禁止登录
                                     var minutes = (user.LockoutEnd!.Value - DateTime.UtcNow).TotalMinutes.ToString("f0", CultureInfo.InvariantCulture);
-                                    ModelState.AddModelError(nameof(LoginRequestModel.UserName), $"用户已锁定,{minutes} 分钟后解除锁定");
+                                    this.ModelState.AddModelError(nameof(LoginRequestModel.UserName), $"用户已锁定,{minutes} 分钟后解除锁定");
                                 }
                             }
                             if (!user.LockoutEnd.HasValue)
@@ -113,11 +113,11 @@ public class TokenController : BaseController, IResourceService<Token>
                                     {//超过次数则锁定
                                         user.LockoutEnd = DateTime.UtcNow + this._identityOptions.DefaultLockoutTimeSpan;
                                         var minutes = (user.LockoutEnd!.Value - DateTime.UtcNow).TotalMinutes.ToString("f0", CultureInfo.InvariantCulture);
-                                        ModelState.AddModelError(nameof(LoginRequestModel.UserName), $"用户已锁定,{minutes} 分钟后解除锁定");
+                                        this.ModelState.AddModelError(nameof(LoginRequestModel.UserName), $"用户已锁定,{minutes} 分钟后解除锁定");
                                     }
                                     else
                                     {//未超过次数提示剩余次数
-                                        ModelState.AddModelError(nameof(LoginRequestModel.Password), $"密码错误,{this._identityOptions.MaxFailedAccessAttempts - user.AccessFailedCount}次失败后将锁定用户");
+                                        this.ModelState.AddModelError(nameof(LoginRequestModel.Password), $"密码错误,{this._identityOptions.MaxFailedAccessAttempts - user.AccessFailedCount}次失败后将锁定用户");
                                     }
                                     this._userRepository.SaveChanges();
                                 }
@@ -125,10 +125,10 @@ public class TokenController : BaseController, IResourceService<Token>
                         }
                         else
                         {
-                            ModelState.AddModelError(nameof(LoginRequestModel.UserName), "用户不存在");
+                            this.ModelState.AddModelError(nameof(LoginRequestModel.UserName), "用户不存在");
                         }
                     }
-                    if (ModelState.IsValid)
+                    if (this.ModelState.IsValid)
                     {//验证成功
                         var roles = this._userRepository.AsNoTracking()
                         .Where(o => o.UserName == model.UserName)

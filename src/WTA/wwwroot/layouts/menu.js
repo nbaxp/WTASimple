@@ -9,7 +9,6 @@ export default {
   template: html`<el-menu
     :collapse="appStore.isMenuCollapse"
     :collapse-transition="false"
-    router
     :default-active="$route.fullPath"
   >
     <menu-item v-for="item in menus" v-model="item" />

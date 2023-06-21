@@ -83,7 +83,7 @@ router.afterEach((to) => {
   }
 });
 
-const reset = (list, parentPath = null) => {
+const reset = (list, parent = null) => {
   return list.map((o) => {
     const item = {
       path: o.path,
@@ -92,7 +92,8 @@ const reset = (list, parentPath = null) => {
     if (o.type === "Resource") {
       item.component = import(`../views/${o.component ? o.component : "list"}.js`);
     }
-    item.meta.path = `${parentPath === null ? "/" : parentPath + "/"}${item.path}`;
+    item.meta.path = `${parent === null ? "/" : parent.meta.path + "/"}${item.path}`;
+    item.meta.fullName = `${parent === null ? "" : parent.meta.title + " > "}${item.meta.title}`;
     if (o.type === "Resource") {
       if (o.children.length) {
         item.meta.buttons = o.children.map((b) => {
@@ -103,7 +104,7 @@ const reset = (list, parentPath = null) => {
         });
       }
     } else if (o.type !== "Operation" && o.children.length) {
-      item.children = reset(o.children, item.meta.path);
+      item.children = reset(o.children, item);
     }
     return item;
   });

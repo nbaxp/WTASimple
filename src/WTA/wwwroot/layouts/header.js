@@ -8,7 +8,8 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { logout } from "../api/user.js";
 import LayoutLocale from "./locale.js";
-import screenfull from "screenfull";
+import router from "../router/index.js";
+import { treeToList } from "../utils/index.js";
 
 export default {
   components: { SvgIcon, LayoutLogo, LayoutLocale, ElMessage, ElMessageBox },
@@ -23,6 +24,28 @@ export default {
       </div>
       <div class="flex">
         <el-space>
+          <el-icon class="cursor-pointer" @click="clickSearch">
+            <ep-search />
+          </el-icon>
+          <el-select
+            ref="searchRef"
+            placeholder="search"
+            v-show="showSearch"
+            @blur="hideSearch"
+            filterable
+            remote
+            :remote-method="searchMenu"
+            v-model="searchModel"
+            :loading="searchLoading"
+          >
+            <el-option
+              v-for="item in searchOptions"
+              :key="item.meta.path"
+              :value="item.meta.path"
+              :label="item.meta.fullName"
+              @click="searchChange(item)"
+            />
+          </el-select>
           <el-icon v-model="isDark" @click="toggleDark()" :size="18" class="cursor-pointer">
             <ep-sunny v-if="isDark" />
             <ep-moon v-else />
@@ -67,6 +90,44 @@ export default {
     const i18n = useI18n();
     const appStore = useAppStore();
     //
+    const searchRef = ref(null);
+    const searchLoading = ref(false);
+    const searchModel = ref("");
+    const searchOptions = ref([]);
+    const showSearch = ref(false);
+    const hideSearch = () => {
+      showSearch.value = false;
+    };
+    const clickSearch = () => {
+      showSearch.value = !showSearch.value;
+      if (showSearch.value) {
+        searchRef.value.focus();
+      }
+    };
+    const searchMenu = (query) => {
+      if (query) {
+        try {
+          searchLoading.value = true;
+          const menus = treeToList(router.getRoutes().find((o) => o.path === "/").children);
+          searchOptions.value = menus
+            .filter((o) => !o.children || o.children.length === 0)
+            .filter((o) => o.meta.fullName.indexOf(query) > -1);
+        } finally {
+          searchLoading.value = false;
+        }
+      }
+    };
+    const searchChange = (route) => {
+      if (!route.meta.isExternal) {
+        router.push(route.meta.path);
+        searchModel.value = "";
+        searchOptions.value = [];
+        showSearch.value = false;
+      } else {
+        window.open(route.path);
+      }
+    };
+    //
     const isDark = useDark();
     const toggleDark = useToggle(isDark);
     const toggleMenuCollapse = () => (appStore.isMenuCollapse = !appStore.isMenuCollapse);
@@ -87,6 +148,15 @@ export default {
     };
     return {
       appStore,
+      showSearch,
+      hideSearch,
+      clickSearch,
+      searchRef,
+      searchLoading,
+      searchModel,
+      searchOptions,
+      searchMenu,
+      searchChange,
       isDark,
       toggleDark,
       toggleMenuCollapse,

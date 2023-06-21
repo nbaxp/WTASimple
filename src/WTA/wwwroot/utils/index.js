@@ -102,9 +102,19 @@ function listToTree(list, func) {
   return tree;
 }
 
+function treeToList(tree, list = []) {
+  tree.forEach((o) => {
+    list.push(o);
+    if (o.children?.length) {
+      treeToList(o.children, list);
+    }
+  });
+  return list;
+}
+
 function getProp(instance, propPath) {
   return get(instance, propPath);
 }
 
 export default html;
-export { persentFormat, bytesFormat, format, schemaToModel, listToTree, getProp };
+export { persentFormat, bytesFormat, format, schemaToModel, listToTree, treeToList, getProp };

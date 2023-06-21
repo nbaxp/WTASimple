@@ -13,7 +13,11 @@ export default {
       </template>
       <menu-item v-for="item in modelValue.children" v-model="item" />
     </el-sub-menu>
-    <el-menu-item v-else :index="modelValue.meta.path">
+    <el-menu-item
+      v-else
+      :index="modelValue.meta.isExternal?null:modelValue.meta.path"
+      @click.native="click(modelValue)"
+    >
       <el-icon><icon :name="modelValue.meta.icon??file" /></el-icon>
       <template #title>
         <span>{{modelValue.meta.title}}</span>
@@ -34,8 +38,18 @@ export default {
       },
       { deep: true }
     );
+    //
+    const click = (route) => {
+      if (!route.meta.isExternal) {
+        router.push(route.meta.path);
+      } else {
+        window.open(route.path);
+      }
+    };
+    //
     return {
       model,
+      click,
     };
   },
 };

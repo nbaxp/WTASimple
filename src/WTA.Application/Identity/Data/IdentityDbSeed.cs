@@ -125,6 +125,18 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             Icon = "home",
             Order = -3,
         }.UpdateId().UpdatePath());
+        context.Set<Permission>().Add(new Permission
+        {
+            IsExternal = true,
+            IsReadonly = true,
+            Type = PermissionType.Resource,
+            Name = "帮助",
+            Number = "help",
+            Path = "https://element-plus.org/",
+            Method = "GET",
+            Icon = "ep-link",
+            Order = 1000,
+        }.UpdateId().UpdatePath());
 
         WebApp.Current.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(IResource))).ForEach(resourceType =>
         {
