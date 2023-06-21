@@ -1,18 +1,20 @@
 import html from "html";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useAppStore } from "../store/index.js";
 import SvgIcon from "../components/icon/index.js";
 import LayoutLogo from "./logo.js";
-import { useDark, useToggle } from "@vueuse/core";
+import { useDark, useFullscreen, useToggle } from "@vueuse/core";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { logout } from "../api/user.js";
 import LayoutLocale from "./locale.js";
+import screenfull from "screenfull";
 
 export default {
   components: { SvgIcon, LayoutLogo, LayoutLocale, ElMessage, ElMessageBox },
   template: html`
     <div class="flex items-center justify-between">
-      <div class="flex">
+      <div class="flex items-center justify-center">
         <layout-logo />
         <el-icon @click="toggleMenuCollapse" class="cursor-pointer">
           <svg-icon name="unfold" v-if="appStore.isMenuCollapse" />
@@ -24,6 +26,10 @@ export default {
           <el-icon v-model="isDark" @click="toggleDark()" :size="18" class="cursor-pointer">
             <ep-sunny v-if="isDark" />
             <ep-moon v-else />
+          </el-icon>
+          <el-icon @click="toggleFullscreen" :size="18" class="cursor-pointer">
+            <svg-icon name="fullscreen-exit" v-if="isFullscreen" />
+            <svg-icon name="fullscreen" v-else />
           </el-icon>
           <el-dropdown class="cursor-pointer" v-if="appStore.token">
             <span class="el-dropdown-link flex">
@@ -60,9 +66,12 @@ export default {
   setup() {
     const i18n = useI18n();
     const appStore = useAppStore();
+    //
     const isDark = useDark();
     const toggleDark = useToggle(isDark);
     const toggleMenuCollapse = () => (appStore.isMenuCollapse = !appStore.isMenuCollapse);
+    //
+    const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(document.documentElement);
     const confirmLogout = async () => {
       try {
         await ElMessageBox.confirm(i18n.t("confirmLogout"), i18n.t("tip"), { type: "warning" });
@@ -81,6 +90,8 @@ export default {
       isDark,
       toggleDark,
       toggleMenuCollapse,
+      isFullscreen,
+      toggleFullscreen,
       confirmLogout,
     };
   },

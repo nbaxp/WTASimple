@@ -19,6 +19,7 @@ a {
 #app {
   width: 100vw;
   height: 100vh;
+  --header: 60px;
 }
 
 #app > .el-container {
@@ -28,8 +29,8 @@ a {
 }
 
 #app > .el-container > .el-container {
-  margin-top: 60px;
-  height: calc(100% - 60px);
+  margin-top: var(--header);
+  height: calc(100% - var(--header));
   overflow: auto;
 }
 
@@ -49,7 +50,7 @@ a {
 }
 
 .el-main {
-  min-height: calc(100% - 60px);
+  min-height: calc(100% - var(--header));
   overflow: auto;
 }
 
@@ -71,11 +72,11 @@ a {
 
 a.logo {
   display: block;
-  height: 60px;
+  height: var(--header);
 }
 
 .footer {
-  height: 60px;
+  height: var(--header);
 }
 
 .logo img {
@@ -85,15 +86,9 @@ a.logo {
 }
 
 .logo h1 {
-  margin: 0;
-  padding: 0;
   height: 32px;
   line-height: 32px;
-  font-size: 18px;
-  min-width: 100px;
   padding-right: 20px;
-  text-align: center;
-  color: var(--el-menu-text-color);
 }
 
 .el-dropdown-link:focus-visible {
@@ -116,7 +111,7 @@ a.logo {
 .el-dialog__footer,
 .el-drawer__header,
 .el-drawer__footer {
-  height: 60px;
+  height: var(--header);
   padding: 15px;
 }
 
