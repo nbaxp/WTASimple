@@ -2,6 +2,7 @@ using WTA.Shared.Attributes;
 
 namespace WTA.Application.Monitor.Controllers;
 
-public class MonitorAttribute : GroupAttribute
+[Order(2)]
+public class SystemMonitorAttribute : GroupAttribute
 {
 }

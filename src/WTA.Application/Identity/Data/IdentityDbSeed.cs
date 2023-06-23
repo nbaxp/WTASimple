@@ -4,6 +4,7 @@ using LinqToDB.Extensions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.EntityFrameworkCore;
 using WTA.Application.Identity.Entities.SystemManagement;
 using WTA.Application.Identity.Entities.Tenants;
 using WTA.Shared;
@@ -28,8 +29,13 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
 
     public void Seed(IdentityDbContext context)
     {
+        //禁用多租户和软删除过滤器
         context.DisableTenantFilter = true; ;
         context.DisableSoftDeleteFilter = true;
+
+        // 数据字典初始化
+        InitDictionaries(context);
+
         //租户初始化
         var tenant = new Tenant
         {
@@ -106,7 +112,11 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
         context.Set<User>().Add(superUser);
     }
 
-    private void InitPermissions(IdentityDbContext context)
+    private void InitDictionaries(DbContext context)
+    {
+    }
+
+    private void InitPermissions(DbContext context)
     {
         //var controllerFeature = new ControllerFeature();
         //this._partManager.PopulateFeature(controllerFeature);
@@ -238,97 +248,5 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             }
             context.SaveChanges();
         });
-
-        //WebApp.Current.ModuleTypes.ForEach(m =>
-        //{
-        //    var moduleType = m.Key;
-        //    var modulePermission = new Permission
-        //    {
-        //        Type = PermissionType.Module,
-        //        Name = moduleType.GetDisplayName(),
-        //        Number = moduleType.Name,
-        //        Path = $"{moduleType.Name.TrimEnd("Module").ToSlugify()}",
-        //        IsHidden = moduleType.HasAttribute<HiddenAttribute>(),
-        //        Icon = moduleType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
-        //        Order = moduleType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
-        //    };
-        //    m.Value.SelectMany(o => o.Value).ForEach(entityType =>
-        //    {
-        //        var columns = entityType.GetProperties()
-        //            //.Where(o => o.PropertyType.IsValueType || o.PropertyType == typeof(string))
-        //            .OrderBy(o => o.GetCustomAttribute<DisplayAttribute>()?.GetOrder())
-        //            .ToDictionary(o => o.Name, o => o.GetDisplayName());
-        //        var resourcePermission = new Permission
-        //        {
-        //            IsReadonly = true,
-        //            Type = PermissionType.Resource,
-        //            Name = entityType.GetDisplayName(),
-        //            Number = $"{modulePermission.Number}.{entityType.Name}",
-        //            Path = $"{entityType.Name.ToSlugify()}",
-        //            IsHidden = entityType.HasAttribute<HiddenAttribute>(),
-        //            Icon = entityType.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
-        //            Order = entityType.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
-        //            Columns = columns
-        //        };
-
-        //        var groupAttribute = entityType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
-        //        if (groupAttribute != null)
-        //        {
-        //            var groupNumber = groupAttribute.GetType().Name;
-        //            var groupPermission = modulePermission.Children.FirstOrDefault(o => o.Number == groupNumber);
-        //            if (groupPermission == null)
-        //            {
-        //                groupPermission = new Permission
-        //                {
-        //                    Type = PermissionType.Group,
-        //                    Name = groupAttribute.GetType().GetDisplayName(),
-        //                    Number = groupNumber,
-        //                    Path = $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}",
-        //                    IsHidden = groupAttribute.GetType().HasAttribute<HiddenAttribute>(),
-        //                    Icon = groupAttribute.GetType().GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.Folder,
-        //                    Order = groupAttribute.GetType().GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default
-        //                };
-        //                modulePermission.Children.Add(groupPermission);
-        //            }
-        //            groupPermission.Children.Add(resourcePermission);
-        //        }
-        //        else
-        //        {
-        //            modulePermission.Children.Add(resourcePermission);
-        //        }
-
-        //        var resourceServiceType = typeof(IResourceService<>).MakeGenericType(entityType);
-        //        actionDescriptors
-        //        .Select(o => o as ControllerActionDescriptor)
-        //        .Where(o => o != null && o.ControllerTypeInfo.AsType().IsAssignableTo(resourceServiceType))
-        //        .ForEach(actionDescriptor =>
-        //        {
-        //            var operation = actionDescriptor?.ActionName!;
-        //            var methodInfo = actionDescriptor?.MethodInfo!;
-        //            var method = (methodInfo.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(HttpMethodAttribute)))
-        //            as HttpMethodAttribute)?.HttpMethods?.FirstOrDefault() ?? "POST";
-        //            if (method != "GET")
-        //            {
-        //                resourcePermission.Children.Add(new Permission
-        //                {
-        //                    IsReadonly = true,
-        //                    Type = PermissionType.Operation,
-        //                    Name = methodInfo.GetDisplayName(),
-        //                    Number = $"{actionDescriptor?.ControllerName}.{operation}",
-        //                    Path = $"{operation.TrimEnd("Async").ToSlugify()}",
-        //                    IsHidden = methodInfo.GetCustomAttributes<HiddenAttribute>().Any(),
-        //                    Method = method,
-        //                    Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
-        //                    Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
-        //                    HtmlClass = methodInfo.GetCustomAttribute<HtmlClassAttribute>()?.Class ?? HtmlClassAttribute.Default,
-        //                    IsTop = methodInfo.GetCustomAttribute<MultipleAttribute>() != null
-        //                }); ;
-        //            }
-        //        });
-        //    });
-        //    modulePermission.UpdatePath();
-        //    context.Set<Permission>().Add(modulePermission);
-        //    context.SaveChanges();
-        //});
     }
 }

@@ -22,7 +22,7 @@ const useAppStore = defineStore("app", {
       // 获取用户信息
       if (await isLogin()) {
         this.user = await getUser();
-        refreshRouter();
+        await refreshRouter();
       }
     },
   },

@@ -3,7 +3,8 @@ using WTA.Shared.Attributes;
 
 namespace WTA.Application.Monitor.Controllers;
 
-[Monitor]
+[Order(3)]
+[SystemMonitor]
 [Component("monitor")]
 public class Monitor : IResource
 {

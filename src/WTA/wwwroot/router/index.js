@@ -4,6 +4,7 @@ import NProgress from "../lib/nprogress/nprogress.vite-esm.js";
 import { isLogin, hasPermission } from "../api/user.js";
 import { useAppStore } from "../store/index.js";
 import { listToTree } from "../utils/index.js";
+import { connection, connect } from "../signalr/index.js";
 
 NProgress.configure({ showSpinner: false });
 
@@ -110,7 +111,8 @@ const reset = (list, parent = null) => {
   });
 };
 
-const refreshRouter = () => {
+const refreshRouter =async () => {
+  await connect();
   const appStore = useAppStore();
   const permissions = appStore.user.permissions.filter((o) => !o.isHidden);
   const tree = reset(

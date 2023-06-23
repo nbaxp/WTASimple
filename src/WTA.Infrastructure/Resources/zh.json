@@ -90,7 +90,7 @@
   "Tenant": "租户",
   "ConnectionString": "连接字符串",
   "TenantId": "租户",
-  "Tenants": "多租户",
+  "Tenants": "租户管理",
   "Identity": "认证中心",
   "SystemManagement": "系统管理",
   "RoleId": "角色",
@@ -114,10 +114,16 @@
   "Department": "部门",
   "Post": "岗位",
   "Dict": "字典",
-  "Monitor": "监控",
+  "SystemMonitor": "系统监控",
+  "Monitor": "服务监控",
   "MonitorModule": "系统监控",
   "JobItem": "定时任务",
   "Captcha": "验证码",
   "CaptchaExpired": "验证码已过期",
-  "CaptchaError": "验证码错误"
+  "CaptchaError": "验证码错误",
+  "DictionaryItem": "数据字典",
+  "UserLogin": "登录历史",
+  "ConnectionId": "连接Id",
+  "IsOnline": "在线",
+  "UserAgent": "用户代理"
 }

@@ -19,17 +19,28 @@ public class PageHub : Hub
 
     public override Task OnConnectedAsync()
     {
-        var userName = this.Context.GetHttpContext()?.User.Identity?.Name;
-        this._logger.LogInformation($"{this.Context.ConnectionId} 已连接 {userName}");
-        this.Groups.AddToGroupAsync(this.Context.ConnectionId, this.Context.ConnectionId);
+        var httpContext = this.Context.GetHttpContext();
+        var userName = httpContext?.User.Identity?.Name;
         if (!string.IsNullOrEmpty(userName))
         {
-            this.Groups.AddToGroupAsync(this.Context.ConnectionId, userName);
-        }
-        this.Clients.Group(this.Context.ConnectionId).SendAsync("Connected", this.Context.ConnectionId);
-        lock (this.balanceLock)
-        {
-            Count++;
+            this._logger.LogInformation($"{this.Context.ConnectionId} 已连接 {userName}");
+            this.Groups.AddToGroupAsync(this.Context.ConnectionId, this.Context.ConnectionId);
+            if (!string.IsNullOrEmpty(userName))
+            {
+                this.Groups.AddToGroupAsync(this.Context.ConnectionId, userName);
+            }
+            this.Clients.Group(this.Context.ConnectionId).SendAsync("Connected", this.Context.ConnectionId);
+            lock (this.balanceLock)
+            {
+                Count++;
+            }
+            this._eventPublisher.Publish(new SignalRConnectedEvent
+            {
+                ConnectionId = this.Context.ConnectionId,
+                UserName = userName,
+                Login = DateTime.UtcNow,
+                UserAgent = httpContext?.Request.Headers["User-Agent"]
+            });
         }
         return base.OnConnectedAsync();
     }
@@ -41,12 +52,17 @@ public class PageHub : Hub
         {
             Count--;
         }
+        this._eventPublisher.Publish(new SignalRDisconnectedEvent
+        {
+            ConnectionId = this.Context.ConnectionId,
+            Logout = DateTime.UtcNow,
+        });
         return base.OnDisconnectedAsync(exception);
     }
 
     public async Task ClientToServer(string command, string data, string? to = null, string? from = null)
     {
-        await this._eventPublisher.Publish(new SignalREvent
+        await this._eventPublisher.Publish(new SignalCommandREvent
         {
             Command = command,
             Data = data,

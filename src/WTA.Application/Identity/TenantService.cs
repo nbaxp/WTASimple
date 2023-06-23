@@ -10,18 +10,14 @@ namespace WTA.Application.Identity;
 [Implement<ITenantService>]
 public class TenantService : ITenantService
 {
-    private readonly string? _tenant;
     private readonly IServiceProvider _serviceProvider;
+
+    public string? TenantId { get; set; }
 
     public TenantService(IHttpContextAccessor httpContextAccessor, IServiceProvider serviceProvider)
     {
-        this._tenant = httpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(o => o.Type == "TenantId")?.Value;
         this._serviceProvider = serviceProvider;
-    }
-
-    public string? GetTenantId()
-    {
-        return this._tenant;
+        this.TenantId = httpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(o => o.Type == "TenantId")?.Value;
     }
 
     public string? GetConnectionString(string connectionStringName)
@@ -31,7 +27,7 @@ public class TenantService : ITenantService
         repository.DisableTenantFilter();
         return repository
             .AsNoTracking()
-            .Where(o => o.Number == this._tenant)
+            .Where(o => o.Number == this.TenantId)
             .SelectMany(o => o.ConnectionStrings)
             .FirstOrDefault(o => o.Name == connectionStringName)
             ?.Value;

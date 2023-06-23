@@ -34,7 +34,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
     public BaseDbContext(DbContextOptions<T> options) : base(options)
     {
         this._tablePrefix = GetTablePrefix();
-        this._tenantId = this.GetService<ITenantService>()?.GetTenantId();
+        this._tenantId = this.GetService<ITenantService>().TenantId;
     }
 
     public bool DisableSoftDeleteFilter { get; set; }
@@ -57,7 +57,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
     protected virtual void BeforeSave(List<EntityEntry> entries)
     {
         var userName = this.GetService<IHttpContextAccessor>().HttpContext?.User.Identity?.Name;
-        var tenant = this.GetService<ITenantService>().GetTenantId();
+        var tenant = this.GetService<ITenantService>().TenantId;
         var now = DateTime.UtcNow;
         foreach (var item in entries.Where(o => o.State == EntityState.Added || o.State == EntityState.Modified || o.State == EntityState.Deleted))
         {
@@ -69,7 +69,7 @@ public abstract class BaseDbContext<T> : DbContext where T : DbContext
                 {
                     entity.CreatedOn = now;
                     entity.CreatedBy = userName ?? "super";
-                    entity.TenantId = tenant ?? "default";
+                    entity.TenantId = tenant;
                     entity.IsDisabled ??= false;
                     entity.IsReadonly ??= false;
                 }

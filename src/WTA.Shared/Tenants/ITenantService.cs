@@ -2,7 +2,7 @@ namespace WTA.Shared.Tenants;
 
 public interface ITenantService
 {
-    string? GetTenantId();
+    string? TenantId { get; set; }
 
     string? GetConnectionString(string connectionStringName);
 }

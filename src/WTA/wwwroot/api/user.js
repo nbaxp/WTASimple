@@ -5,6 +5,7 @@ import qs from "../lib/qs/shim.js";
 import { useAppStore } from "../store/index.js";
 import { refreshRouter } from "../router/index.js";
 import Enumerable from "linq";
+import { connection } from "../signalr/index.js";
 
 const isLogin = async () => {
   const appStore = useAppStore();
@@ -48,7 +49,7 @@ const login = async (action, data) => {
     appStore.token = result.data.access_token;
     setRefreshToken(result.data.refresh_token);
     appStore.user = await getUser();
-    refreshRouter();
+    await refreshRouter();
     const redirect = router.currentRoute.value.query?.redirect ?? "/";
     router.push(redirect);
   }
@@ -93,6 +94,9 @@ const getRefreshToken = () => localStorage.getItem(refreshTokenKey);
 
 const setRefreshToken = (refreshToken) => localStorage.setItem(refreshTokenKey, refreshToken);
 
-const removeRefreshToken = () => localStorage.removeItem(refreshTokenKey);
+const removeRefreshToken = () => {
+  localStorage.removeItem(refreshTokenKey);
+  connection.stop();
+};
 
 export { isLogin, login, logout, getUser, hasPermission };

@@ -2,7 +2,7 @@ using WTA.Shared.Attributes;
 
 namespace WTA.Application.Identity.Entities;
 
-//[Module<IdentityModule>]
+[Order(1)]
 public class SystemManagementAttribute : GroupAttribute
 {
 }

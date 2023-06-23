@@ -1,10 +1,11 @@
+using WTA.Application.Monitor.Controllers;
 using WTA.Shared.Attributes;
 using WTA.Shared.Domain;
 
-namespace WTA.Application.Identity.Entities.SystemManagement;
+namespace WTA.Application.Monitor.Entities;
 
-[Order(5)]
-[SystemManagement]
+[Order(2)]
+[SystemMonitor]
 public class JobItem : BaseEntity
 {
     public string Name { get; set; } = null!;

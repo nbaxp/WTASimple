@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using WTA.Application.Identity.Entities.SystemManagement;
 using WTA.Application.Identity.Entities.Tenants;
+using WTA.Application.Monitor.Entities;
 using WTA.Shared.Extensions;
 
 namespace WTA.Shared.Data.Config;
@@ -15,7 +16,9 @@ public class IdentityConfiguration : IDbConfig<IdentityDbContext>, IEntityTypeCo
      IEntityTypeConfiguration<Post>,
      IEntityTypeConfiguration<UserRole>,
      IEntityTypeConfiguration<RolePermission>,
-     IEntityTypeConfiguration<JobItem>
+     IEntityTypeConfiguration<JobItem>,
+     IEntityTypeConfiguration<DictionaryItem>,
+     IEntityTypeConfiguration<UserLogin>
 {
     public void Configure(EntityTypeBuilder<Tenant> builder)
     {
@@ -74,5 +77,14 @@ public class IdentityConfiguration : IDbConfig<IdentityDbContext>, IEntityTypeCo
     public void Configure(EntityTypeBuilder<Post> builder)
     {
         builder.HasAlternateKey(o => o.Number);
+    }
+
+    public void Configure(EntityTypeBuilder<DictionaryItem> builder)
+    {
+    }
+
+    public void Configure(EntityTypeBuilder<UserLogin> builder)
+    {
+        builder.HasAlternateKey(o => o.ConnectionId);
     }
 }

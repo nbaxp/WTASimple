@@ -42,6 +42,7 @@ using WTA.Shared.Data;
 using WTA.Shared.DataAnnotations;
 using WTA.Shared.DependencyInjection;
 using WTA.Shared.Domain;
+using WTA.Shared.EventBus;
 using WTA.Shared.Extensions;
 using WTA.Shared.Job;
 using WTA.Shared.Localization;
@@ -245,6 +246,8 @@ public class WebApp
         this.AddDefaultServices(builder);
         // 添加默认配置
         this.AddDefaultOptions(builder);
+        // 添加本地事件
+        this.AddEventBus(builder);
         // 添加缓存
         builder.Services.AddMemoryCache();
         // 添加数据上下文
@@ -530,7 +533,18 @@ public class WebApp
         {
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options => options.TokenValidationParameters = tokenValidationParameters);
+        }).AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = tokenValidationParameters;
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    context.Token ??= context.Request.Query["access_token"];
+                    return Task.CompletedTask;
+                }
+            };
+        });
         //builder.Services.AddTransient<ITokenService, TokenService>();
         builder.Services.AddAuthorization();
     }
@@ -597,6 +611,21 @@ public class WebApp
             });
     }
 
+    public void AddEventBus(WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IEventPublisher, DefaultEventPublisher>();
+        Assemblies?
+            .SelectMany(o => o.GetTypes())
+            .Where(t => t.GetInterfaces().Any(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IEventHander<>)))
+            .ToList()
+            .ForEach(type =>
+            {
+                type.GetInterfaces()
+                .Where(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IEventHander<>)).ToList()
+                .ForEach(o => builder.Services.AddScoped(o, type));
+            });
+    }
+
     public void AddDbContext(WebApplicationBuilder builder)
     {
         var parameterTypes = new Type[]
@@ -621,7 +650,7 @@ public class WebApp
                     var tenantService = this.Services.GetService<ITenantService>();
                     if (tenantService != null)
                     {
-                        var tenantId = tenantService?.GetTenantId();
+                        var tenantId = tenantService?.TenantId;
                         if (tenantId != null)
                         {
                             connectionString = tenantService?.GetConnectionString(connectionStringName);
