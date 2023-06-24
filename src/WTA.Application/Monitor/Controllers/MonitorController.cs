@@ -6,7 +6,7 @@ using WTA.Shared.Monitor;
 namespace WTA.Application.Monitor.Controllers;
 
 [ApiExplorerSettings(GroupName = nameof(MonitorModule))]
-[Route("api/{culture}/monitor/[controller]/[action]")]
+[Route("api/{culture}/system-monitor/[controller]/[action]")]
 public class MonitorController : Controller, IResourceService<Monitor>
 {
     private readonly IMonitorService _monitorService;

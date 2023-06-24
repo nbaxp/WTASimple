@@ -22,6 +22,7 @@ public class BaseService
             .Where(o => !o.StartsWith("127."))
             .ToArray();
         var gcMemoryInfo = GC.GetGCMemoryInfo();
+        var drive = DriveInfo.GetDrives().FirstOrDefault(o => o.RootDirectory.FullName == Directory.GetDirectoryRoot(Path.GetPathRoot(Environment.ProcessPath!)!))!;
         var model = new MonitorModel
         {
             ServerTime = DateTimeOffset.UtcNow,
@@ -45,8 +46,11 @@ public class BaseService
             HeapSizeBytes = gcMemoryInfo.HeapSizeBytes,
             ProcessMemory = this.CurrentProcess.WorkingSet64,
             OnlineUsers = PageHub.Count,
-            HandleCount = this.CurrentProcess.HandleCount
+            HandleCount = this.CurrentProcess.HandleCount,
+            DriveName = drive.Name,
+            DrivieTotalSize = drive.TotalSize,
+            DriveAvailableFreeSpace = drive.AvailableFreeSpace
         };
-        return model;//CurrentProcess.Threads.h
+        return model;
     }
 }

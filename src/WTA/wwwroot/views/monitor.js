@@ -27,6 +27,10 @@ export default {
             <el-descriptions-item label="地址">{{model.hostAddresses}}</el-descriptions-item>
             <el-descriptions-item label="进程">{{model.processCount}}</el-descriptions-item>
             <el-descriptions-item label="线程">{{model.threadCount}}</el-descriptions-item>
+            <el-descriptions-item label="名称">{{model.driveName}}</el-descriptions-item>
+            <el-descriptions-item label="大小">{{bytesFormat(model.drivieTotalSize)}}</el-descriptions-item>
+            <el-descriptions-item label="剩余">{{bytesFormat(model.driveAvailableFreeSpace)}}</el-descriptions-item>
+            <el-descriptions-item label="占用">{{persentFormat(1-model.driveAvailableFreeSpace/model.drivieTotalSize)}}</el-descriptions-item>
           </el-descriptions>
         </el-card>
       </el-col>

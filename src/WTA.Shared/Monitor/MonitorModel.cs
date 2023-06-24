@@ -72,4 +72,7 @@ public class MonitorModel
     public double TotalSeconds { get; set; }
 
     public string UserName { get; set; } = null!;
+    public string DriveName { get; set; } = null!;
+    public long DriveAvailableFreeSpace { get; set; }
+    public long DrivieTotalSize { get; set; }
 }
