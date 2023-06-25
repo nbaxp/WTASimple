@@ -1,23 +1,26 @@
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Query;
 using WTA.Shared.Domain;
 
 namespace WTA.Shared.Data;
 
-public interface IRepository<T> where T : BaseEntity
+public interface IRepository<TEntity> where TEntity : BaseEntity
 {
-    IQueryable<T> Queryable();
+    IQueryable<TEntity> Queryable();
 
-    IQueryable<T> AsNoTracking();
+    IQueryable<TEntity> AsNoTracking();
 
-    IQueryable<T> AsNoTrackingWithIdentityResolution();
+    IQueryable<TEntity> AsNoTrackingWithIdentityResolution();
 
-    void Delete(Guid id);
+    void Update(Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls, Expression<Func<TEntity, bool>> predicate);
 
-    void Delete(Guid[] guids);
+    void Delete(Expression<Func<TEntity, bool>> predicate);
 
-    void Insert(T entity);
+    void Insert(TEntity entity);
 
     void SaveChanges();
 
     void DisableSoftDeleteFilter();
+
     void DisableTenantFilter();
 }

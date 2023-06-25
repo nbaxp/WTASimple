@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using WTA.Application.Identity.Entities.SystemManagement;
 using WTA.Application.Identity.Entities.Tenants;
+using WTA.Application.Monitor.Entities;
 using WTA.Shared;
 using WTA.Shared.Application;
 using WTA.Shared.Attributes;
@@ -32,6 +33,9 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
         //禁用多租户和软删除过滤器
         context.DisableTenantFilter = true; ;
         context.DisableSoftDeleteFilter = true;
+
+        // 定时器初始化
+        context.Set<JobItem>().Add(new JobItem { Name = "客户端监测", Cron = "* * * * *", Service = "WTA.Application.Monitor.UserLoginSrevice" });
 
         // 数据字典初始化
         InitDictionaries(context);

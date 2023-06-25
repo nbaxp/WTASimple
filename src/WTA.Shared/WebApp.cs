@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
@@ -100,17 +99,6 @@ public class WebApp
         });
         // 获取全部模块类型
         this.ModuleTypes = this.Assemblies.SelectMany(o => o.GetTypes()).Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(BaseModule))).ToList();
-        //moduleTypes.ForEach(mt =>
-        //{
-        //    var moduleDbContextTypes = new Dictionary<Type, List<Type>>();
-        //    dbContextTypes
-        //    .Where(o => o.GetCustomAttributes().Any(a => a.GetType().IsGenericType && a.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>) && a.GetType().GetGenericArguments()[0] == mt))
-        //    .ForEach(dt =>
-        //    {
-        //        moduleDbContextTypes.Add(dt, this.DbContextTypes[dt]);
-        //    });
-        //    this.ModuleTypes.Add(mt, moduleDbContextTypes);
-        //});
     }
 
     public virtual void Start(string[] args, Action<WebApplicationBuilder>? configureBuilder = null, Action<WebApplication>? configureApplication = null)
@@ -182,7 +170,6 @@ public class WebApp
         {
             //1. 从数据库中读取定时任务加入队列
             //2. 任务增删改查时，队列同步改动
-            Debug.WriteLine("scheduler");
             using var scope = app.Services.CreateScope();
             var JobItemRepository = scope.ServiceProvider.GetRequiredService<IRepository<T>>();
             JobItemRepository.Queryable().ToList().ForEach(job =>
@@ -190,7 +177,7 @@ public class WebApp
                 using var scope = app.Services.CreateScope();
                 if (typeof(T).GetProperty("Service")?.GetValue(job) is string service && typeof(T).GetProperty("Cron")?.GetValue(job) is string cron)
                 {
-                    var serviceType = Type.GetType(service);
+                    var serviceType = Current.Assemblies.SelectMany(a => a.GetTypes()).FirstOrDefault(o => o.FullName == service);
                     if (serviceType != null)
                     {
                         if (scope.ServiceProvider.GetService(serviceType) is IJobService jobService)
@@ -254,12 +241,18 @@ public class WebApp
         this.AddDbContext(builder);
         // 定时任务
         builder.Services.AddScheduler();
+        Current.Assemblies.SelectMany(o => o.GetTypes())
+            .Where(o => o.IsClass && !o.IsAbstract && o.IsAssignableTo(typeof(IJobService)))
+            .ForEach(o => builder.Services.AddTransient(o));
     }
 
     public virtual void AddSignalR(WebApplicationBuilder builder)
     {
         //SignalR
-        var signalRServerBuilder = builder.Services.AddSignalR(o => o.EnableDetailedErrors = true);
+        var signalRServerBuilder = builder.Services.AddSignalR(o =>
+        {
+            o.EnableDetailedErrors = true;
+        });
         var redisConnectionString = builder.Configuration.GetConnectionString("SignalR");
         if (!string.IsNullOrEmpty(redisConnectionString))
         {
@@ -614,7 +607,7 @@ public class WebApp
     public void AddEventBus(WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<IEventPublisher, DefaultEventPublisher>();
-        Assemblies?
+        this.Assemblies?
             .SelectMany(o => o.GetTypes())
             .Where(t => t.GetInterfaces().Any(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IEventHander<>)))
             .ToList()

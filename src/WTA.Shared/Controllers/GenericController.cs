@@ -146,7 +146,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     {
         try
         {
-            this.Repository.Delete(guids);
+            this.Repository.Delete(o=>guids.Contains(o.Id));
             this.Repository.SaveChanges();
             return NoContent();
         }

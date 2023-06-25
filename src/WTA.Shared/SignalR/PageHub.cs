@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WTA.Shared.EventBus;
 
@@ -41,6 +43,14 @@ public class PageHub : Hub
                 Login = DateTime.UtcNow,
                 UserAgent = httpContext?.Request.Headers["User-Agent"]
             });
+            this.Context.Features.Get<IConnectionHeartbeatFeature>()?.OnHeartbeat(o =>
+            {
+                if (DateTime.Now.Second % 15 == 0)
+                {
+                    using var scope = WebApp.Current.Services.CreateScope();
+                    scope.ServiceProvider.GetService<IEventPublisher>()?.Publish(new SignalRHeartbeatEvent { ConnectionId = o?.ToString()! });
+                }
+            }, this.Context.ConnectionId);
         }
         return base.OnConnectedAsync();
     }

@@ -125,5 +125,6 @@
   "UserLogin": "登录历史",
   "ConnectionId": "连接Id",
   "IsOnline": "在线",
+  "Heartbeat": "心跳",
   "UserAgent": "用户代理"
 }

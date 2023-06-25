@@ -11,6 +11,7 @@ const connection = new signalR.HubConnectionBuilder()
       return appStore.token;
     },
   })
+  .withAutomaticReconnect()
   .build();
 const connect = async () => {
   if (await isLogin()) {
@@ -22,7 +23,7 @@ const connect = async () => {
         })
         .catch(function (error) {
           console.error(error);
-          setTimeout(connect, 5000);
+          //setTimeout(connect, 5000);
         });
     }
   }

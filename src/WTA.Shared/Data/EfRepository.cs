@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.DependencyInjection;
 using WTA.Shared.Domain;
 
@@ -30,14 +32,14 @@ public class EfRepository<TEntity> : IRepository<TEntity> where TEntity : BaseEn
         return this._dbContext.Set<TEntity>().AsNoTrackingWithIdentityResolution();
     }
 
-    public void Delete(Guid[] guids)
+    public void Update(Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls, Expression<Func<TEntity, bool>> predicate)
     {
-        this._dbContext.Set<TEntity>().Where(o => guids.Contains(o.Id)).ExecuteDelete();
+        this._dbContext.Set<TEntity>().Where(predicate).ExecuteUpdate(setPropertyCalls);
     }
 
-    public void Delete(Guid id)
+    public void Delete(Expression<Func<TEntity, bool>> predicate)
     {
-        this._dbContext.Set<TEntity>().Where(o => o.Id == id).ExecuteDelete();
+        this._dbContext.Set<TEntity>().Where(predicate).ExecuteDelete();
     }
 
     public void Insert(TEntity entity)

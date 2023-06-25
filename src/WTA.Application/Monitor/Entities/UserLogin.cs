@@ -20,5 +20,6 @@ public class UserLogin : BaseEntity
     [Required]
     public bool? IsOnline { get; set; }
 
+    public DateTime? Heartbeat { get; set; }
     public string? UserAgent { get; set; }
 }
