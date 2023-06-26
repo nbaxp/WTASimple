@@ -2,7 +2,7 @@ import html from "html";
 import { ElConfigProvider } from "element-plus";
 import zh from "./lib/element-plus/locale/zh-cn.min.mjs";
 import en from "./lib/element-plus/locale/en.min.mjs";
-import { Suspense, reactive } from "vue";
+import { Suspense, reactive, onMounted } from "vue";
 
 export default {
   components: { ElConfigProvider, Suspense },
@@ -19,6 +19,7 @@ export default {
         ["en", en],
       ])
     );
+    onMounted(() => document.querySelector("#loading.loading").classList.remove("loading"));
     return {
       localeMap,
     };

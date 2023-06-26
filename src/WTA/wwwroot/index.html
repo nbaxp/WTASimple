@@ -5,12 +5,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <base href="/" />
+  <style>
+    @keyframes loading-rotate {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    #loading {
+      display: none;
+      animation: loading-rotate 2s linear infinite;
+    }
+
+    #loading.loading {
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: auto;
+      width: 50px;
+      height: 50px;
+    }
+  </style>
   <link rel="stylesheet" href="./main.css" />
   <title></title>
 </head>
 
 <body>
   <div id="app"></div>
+  <img src="./assets/icons/loading.svg" id="loading" class="loading">
   <script type="importmap">
     {
       "imports": {
