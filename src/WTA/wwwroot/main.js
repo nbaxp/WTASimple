@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import style from './mixins/style.js';
 import store, { useAppStore } from "./store/index.js";
 import router from "./router/index.js";
 import ElementPlus from "element-plus";
@@ -15,4 +16,5 @@ app.use(ElementPlus);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(`Ep${key}`, component);
 }
+app.mixin(style);
 app.mount("#app");
