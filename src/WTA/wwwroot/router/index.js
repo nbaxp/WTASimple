@@ -111,13 +111,14 @@ const reset = (list, parent = null) => {
   });
 };
 
-const refreshRouter =async () => {
+const refreshRouter = async () => {
   await connect();
   const appStore = useAppStore();
   const permissions = appStore.user.permissions.filter((o) => !o.isHidden);
   const tree = reset(
     listToTree(permissions, (o) => {
       o.meta = {
+        type: o.type,
         title: o.name,
         icon: o.icon,
         order: o.order,

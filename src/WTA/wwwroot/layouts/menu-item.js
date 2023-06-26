@@ -14,7 +14,7 @@ export default {
       <menu-item v-for="item in modelValue.children" v-model="item" />
     </el-sub-menu>
     <el-menu-item
-      v-else
+      v-else-if="modelValue.meta.type==='Resource'"
       :index="modelValue.meta.isExternal?null:modelValue.meta.path"
       @click.native="click(modelValue)"
     >
