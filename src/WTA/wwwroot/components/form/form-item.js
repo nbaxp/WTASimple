@@ -3,13 +3,14 @@ import { ref, reactive, watch } from "vue";
 import AppFormInput from "./form-input.js";
 
 export default {
+  name: "formItem",
   components: { AppFormInput },
   template: html`
     <template v-if="showItem()">
       <template v-if="schema.type==='object'"></template>
-      <template v-else-if="schema.type==='array'"></template>
-      <template v-else>
+      <template v-if="schema.type!=='array'||(schema.items.type!=='object'&&schema.items.type!=='array')"> </template>
         <el-form-item
+          :title="getProp(prop)"
           :label="schema.title"
           :prop="getProp(prop)"
           :rules="getRules(parentSchema,schema,model)"

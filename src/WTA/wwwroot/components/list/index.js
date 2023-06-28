@@ -295,7 +295,7 @@ export default {
         const vm = (await get(url)).data;
         Object.assign(editFormSchema, vm.schema);
         Object.assign(editFormModel, vm.model);
-        editFormTitle.value = `${t("update")}${schema.title}`;
+        editFormTitle.value = `${t("create")}${schema.title}`;
         dialogVisible.value = true;
       } else if (item.path === "update") {
         //update
