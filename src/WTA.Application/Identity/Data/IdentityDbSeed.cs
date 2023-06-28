@@ -113,7 +113,12 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             PasswordHash = this._passwordHasher.HashPassword("123456", "123456"),
             Properties = new Dictionary<string, string> { { "key1", "value1" } }
         }.SetIdBy(o => o.UserName);
-        superUser.UserRoles.Add(new UserRole { IsReadonly = true, UserId = superUser.Id, RoleId = superRole.Id }.SetIdBy(o => new { o.UserId, o.RoleId }));
+        superUser.UserRoles.Add(new UserRole
+        {
+            //IsReadonly = true,
+            UserId = superUser.Id,
+            RoleId = superRole.Id
+        }.SetIdBy(o => new { o.UserId, o.RoleId }));
         context.Set<User>().Add(superUser);
     }
 
