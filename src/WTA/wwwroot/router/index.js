@@ -76,6 +76,8 @@ router.beforeEach(async (to, from, next) => {
 
 router.afterEach((to) => {
   try {
+    const appStore = useAppStore();
+    appStore.add(to);
     if (to.meta.title) {
       useTitle().value = `${to.meta.title}`;
     }

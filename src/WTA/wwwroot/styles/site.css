@@ -50,7 +50,7 @@ a {
 }
 
 .el-main {
-  min-height: calc(100% - var(--header));
+  min-height: calc(100% - 100px);
   overflow: auto;
 }
 

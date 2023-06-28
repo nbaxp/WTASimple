@@ -9,6 +9,8 @@ const useAppStore = defineStore("app", {
     const state = {
       settings: { ...settings },
       isMenuCollapse: false,
+      isRefreshing: false,
+      routes: [],
     };
     const localSettings = JSON.parse(localStorage.getItem("settings") ?? "{}");
     Object.assign(state.settings, localSettings);
@@ -23,6 +25,14 @@ const useAppStore = defineStore("app", {
       if (await isLogin()) {
         this.user = await getUser();
         await refreshRouter();
+      }
+    },
+    add(route) {
+      if (!this.routes.find((o) => o.fullPath === route.fullPath)) {
+        this.routes.push(route);
+      } else {
+        const index = this.routes.findIndex((o) => o.fullPath === route.fullPath);
+        this.routes[index] = route;
       }
     },
   },
