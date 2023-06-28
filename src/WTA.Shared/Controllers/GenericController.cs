@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,14 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
         {
             query = query.OrderBy(model.OrderBy);
         }
-        query = query.Skip(model.PageSize * (model.PageIndex - 1)).Take(model.PageSize);
+        if (model.QueryAll)
+        {
+            model.PageSize = model.TotalCount;
+        }
+        else
+        {
+            query = query.Skip(model.PageSize * (model.PageIndex - 1)).Take(model.PageSize);
+        }
         model.Items = query
             .ToList()
             .Select(o => o.ToObject<TListModel>())
@@ -146,7 +154,7 @@ public class GenericController<TEntity, TModel, TListModel, TSearchModel, TImpor
     {
         try
         {
-            this.Repository.Delete(o=>guids.Contains(o.Id));
+            this.Repository.Delete(o => guids.Contains(o.Id));
             this.Repository.SaveChanges();
             return NoContent();
         }

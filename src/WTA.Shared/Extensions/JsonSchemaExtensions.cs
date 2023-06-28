@@ -66,7 +66,7 @@ public static class JsonSchemaExtensions
             if (modelType != meta.ElementMetadata!.ModelType.UnderlyingSystemType)
             {
                 schema.Add("type", "array");
-                //schema.Add("items", meta.ElementMetadata!.ModelType.GetMetadataForType(serviceProvider));
+                schema.TryAdd("multiple", true);
                 schema.Add("items", meta.ElementMetadata.GetSchema(serviceProvider, meta));
             }
         }
@@ -131,6 +131,10 @@ public static class JsonSchemaExtensions
         schema.AddNotNull("description", meta.Description);
         schema.AddNotNull("format", meta.DataTypeName?.ToLowerCamelCase());
         schema.AddNotNull("input", meta.TemplateHint?.ToLowerCamelCase());
+        if (meta.TemplateHint == "select" && meta.IsEnumerableType && modelType.IsGenericType)
+        {
+            schema.TryAdd("url", modelType.GetGenericArguments().First().Name.ToSlugify());
+        }
 
         if (meta is DefaultModelMetadata defaultModelMetadata)
         {
@@ -143,9 +147,11 @@ public static class JsonSchemaExtensions
                 }
                 if (defaultModelMetadata.Attributes.Attributes.FirstOrDefault(o => o.GetType() == typeof(NavigationAttribute)) is NavigationAttribute navigationAttribute)
                 {
-                    var path = navigationAttribute.Path ?? $"{propertyName[..^2]}.Name";
+                    var path = navigationAttribute.Property ?? $"{propertyName[..^2]}.Name";
                     path = string.Join('.', path.Split('.').Select(o => o.ToLowerCamelCase()));
                     schema.Add("navigation", path);
+                    schema.Add("input", "select");
+                    schema.Add("url", propertyName[..^2].ToSlugify());
                 }
                 if (defaultModelMetadata.Attributes.Attributes.FirstOrDefault(o => o.GetType() == typeof(ScaffoldColumnAttribute)) is ScaffoldColumnAttribute scaffoldColumnAttribute
                     && !scaffoldColumnAttribute.Scaffold)
@@ -184,7 +190,12 @@ public static class JsonSchemaExtensions
         var actionContext = new ActionContext { HttpContext = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext! };
         var provider = new EmptyModelMetadataProvider();
         var modelValidationContextBase = new ModelValidationContextBase(actionContext, meta, new EmptyModelMetadataProvider());
-        if (pm.IsRequired && !pm.IsNullableValueType && !pm.UnderlyingOrModelType.IsValueType && !pm.Attributes.Attributes.Any(o => o.GetType() == typeof(RequiredAttribute)))
+        if (pm.IsRequired &&
+            !pm.IsNullableValueType &&
+            !pm.UnderlyingOrModelType.IsValueType &&
+            !pm.IsEnumerableType &&
+            !pm.Attributes.Attributes.Any(o => o.GetType() == typeof(RequiredAttribute))
+            )
         {
             var message = string.Format(CultureInfo.InvariantCulture, localizer.GetString(nameof(RequiredAttribute)).Value, title);
             rules.Add(new Dictionary<string, object> { { "required", true }, { "message", message } });
@@ -234,7 +245,6 @@ public static class JsonSchemaExtensions
                 else if (attribute is RequiredAttribute)
                 {
                     rule.Add("required", true);
-                    //message = string.Format(CultureInfo.InvariantCulture, localizer.GetString(nameof(RequiredAttribute)).Value, title);
                 }
                 else if (attribute is CompareAttribute compare)//??
                 {

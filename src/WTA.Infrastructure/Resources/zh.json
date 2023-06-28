@@ -92,7 +92,7 @@
   "TenantId": "租户",
   "Tenants": "租户管理",
   "Identity": "认证中心",
-  "SystemManagement": "系统管理",
+  "SystemManagement": "基础数据",
   "RoleId": "角色",
   "PermissionId": "权限",
   "UserRoles": "用户角色",
@@ -126,5 +126,6 @@
   "ConnectionId": "连接Id",
   "IsOnline": "在线",
   "Heartbeat": "心跳",
-  "UserAgent": "用户代理"
+  "UserAgent": "用户代理",
+  "PostId": "岗位"
 }

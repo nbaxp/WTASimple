@@ -3,10 +3,10 @@ namespace WTA.Shared.Attributes;
 [AttributeUsage(AttributeTargets.Property)]
 public class NavigationAttribute : Attribute
 {
-    public NavigationAttribute(string? path = null)
+    public NavigationAttribute(string? property = null)
     {
-        this.Path = path;
+        this.Property = property;
     }
 
-    public string? Path { get; }
+    public string? Property { get; }
 }

@@ -1,6 +1,7 @@
 import html from "html";
 import { ref, reactive, watch } from "vue";
 import { dayjs } from "element-plus";
+import { post } from "../../request/index.js";
 
 export default {
   template: html`
@@ -20,8 +21,9 @@ export default {
           :multiple="!!schema.multiple"
           clearable
           style="width:100%"
+          :title="JSON.stringify(options)"
         >
-          <el-option v-for="item in schema.options" :key="item.value" :label="item.label" :value="item.value" />
+          <el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </template>
       <el-input
@@ -83,11 +85,24 @@ export default {
       return schema.input ?? schema.type;
     };
     /*end*/
+    const options = ref([]);
+    if (props.schema.options) {
+      options.value = props.schema.options;
+    } else if (props.schema.url) {
+      try {
+        const url = `${props.schema.url}/index`;
+        const result = await post(url, { queryAll: true });
+        options.value = result.data?.items;
+      } catch (error) {
+        console.log(error);
+      }
+    }
     return {
       model,
       getDisabled,
       getInput,
       dayjs,
+      options,
     };
   },
 };

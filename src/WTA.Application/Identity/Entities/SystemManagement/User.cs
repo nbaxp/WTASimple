@@ -27,10 +27,12 @@ public class User : BaseEntity
     [Navigation]
     public Guid? DepartmentId { get; set; }
 
+    [Navigation]
     public Guid? PostId { get; set; }
 
     public Department? Department { get; set; }
     public Post? Post { get; set; }
 
+    [UIHint("select")]
     public List<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

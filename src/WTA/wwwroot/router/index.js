@@ -95,6 +95,7 @@ const reset = (list, parent = null) => {
     if (o.type === "Resource") {
       item.component = import(`../views/${o.component ? o.component : "list"}.js`);
     }
+    item.meta.controller = item.path;
     item.meta.path = `${parent === null ? "/" : parent.meta.path + "/"}${item.path}`;
     item.meta.fullName = `${parent === null ? "" : parent.meta.title + " > "}${item.meta.title}`;
     if (o.type === "Resource") {

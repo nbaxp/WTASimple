@@ -8,9 +8,9 @@ export default {
   template: html`
     <template v-if="showItem()">
       <template v-if="schema.type==='object'"></template>
-      <template v-if="schema.type!=='array'||(schema.items.type!=='object'&&schema.items.type!=='array')"> </template>
+      <template v-else-if="schema.type!=='array'||schema.items.type!=='array'">
         <el-form-item
-          :title="getProp(prop)"
+          :title="schema.type"
           :label="schema.title"
           :prop="getProp(prop)"
           :rules="getRules(parentSchema,schema,model)"
@@ -18,6 +18,7 @@ export default {
         >
           <app-form-input :schema="schema" :prop="prop" v-model="model" :isReadOnly="mode==='details'" />
         </el-form-item>
+      </template>
       </template>
     </template>
   `,

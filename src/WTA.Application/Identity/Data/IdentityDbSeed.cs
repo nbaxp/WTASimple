@@ -104,6 +104,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
         // 用户初始化
         var superUser = new User
         {
+            DepartmentId = context.Set<Department>().FirstOrDefault()?.Id,
             IsReadonly = true,
             UserName = "super",
             NormalizedUserName = "super".Normalize(),
@@ -139,6 +140,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
             Icon = "home",
             Order = -3,
         }.UpdateId().UpdatePath());
+
         context.Set<Permission>().Add(new Permission
         {
             IsExternal = true,
@@ -195,7 +197,7 @@ public class IdentityDbSeed : IDbSeed<IdentityDbContext>
                         Path = $"{operation.TrimEnd("Async").ToSlugify()}",
                         IsHidden = methodInfo.GetCustomAttributes<HiddenAttribute>().Any(),
                         Method = method,
-                        Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? $"{operation.TrimEnd("Async").ToSlugify()}",
+                        Icon = methodInfo.GetCustomAttribute<IconAttribute>()?.Icon ?? IconAttribute.File,
                         Order = methodInfo.GetCustomAttribute<OrderAttribute>()?.Order ?? OrderAttribute.Default,
                         HtmlClass = methodInfo.GetCustomAttribute<HtmlClassAttribute>()?.Class ?? HtmlClassAttribute.Default,
                         IsTop = methodInfo.GetCustomAttribute<MultipleAttribute>() != null

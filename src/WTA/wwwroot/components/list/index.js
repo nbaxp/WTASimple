@@ -2,7 +2,7 @@ import html, { getProp } from "html";
 import AppForm from "../form/index.js";
 import { get, post } from "../../request/index.js";
 import { ref, reactive } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import SvgIcon from "../../components/icon/index.js";
 import { schemaToModel } from "../../utils/index.js";
@@ -196,7 +196,7 @@ export default {
     const dialogVisible = ref(false);
     const route = useRoute();
     const { t } = useI18n();
-    const baseUrl = `${route.meta.path}`.substring(1);
+    const baseUrl = `${route.meta.controller}`;
     const indexUrl = `${baseUrl}/index`;
     const vm = (await get(indexUrl)).data;
     const schema = vm.schema;

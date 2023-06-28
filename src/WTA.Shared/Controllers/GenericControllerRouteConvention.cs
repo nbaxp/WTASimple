@@ -16,19 +16,19 @@ public class GenericControllerRouteConvention : IControllerModelConvention
         if (baseControllerType != null)
         {
             var routeTemplate = $"api/{{culture=zh}}/";
-            var genericType = baseControllerType.GenericTypeArguments[0];
-            var groupAttribute = genericType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
-            var moduleAttribute = groupAttribute?.GetType().GetCustomAttributes()
-                       .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
-                       .Select(o => o as ITypeAttribute).Select(o => o?.Type).FirstOrDefault();
-            if (moduleAttribute != null)
-            {
-                routeTemplate += $"{moduleAttribute.Name.TrimEnd("Module").ToSlugify()}/";
-            }
-            if (groupAttribute != null)
-            {
-                routeTemplate += $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}/";
-            }
+            //var genericType = baseControllerType.GenericTypeArguments[0];
+            //var groupAttribute = genericType.GetCustomAttributes().FirstOrDefault(o => o.GetType().IsAssignableTo(typeof(GroupAttribute)));
+            //var moduleAttribute = groupAttribute?.GetType().GetCustomAttributes()
+            //           .Where(o => o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition() == typeof(ModuleAttribute<>))
+            //           .Select(o => o as ITypeAttribute).Select(o => o?.Type).FirstOrDefault();
+            //if (moduleAttribute != null)
+            //{
+            //    routeTemplate += $"{moduleAttribute.Name.TrimEnd("Module").ToSlugify()}/";
+            //}
+            //if (groupAttribute != null)
+            //{
+            //    routeTemplate += $"{groupAttribute.GetType().Name.TrimEnd("Attribute").ToSlugify()}/";
+            //}
             routeTemplate += "[controller]/[action]";
             controller.Selectors.Add(new SelectorModel
             {
